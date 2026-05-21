@@ -80,6 +80,10 @@ A pump.fun create instruction has many accounts and is near the 1232-byte tx siz
 
 Jito bundles solve this: two separate txs that share a blockhash and execute atomically (all-or-nothing) on the block engine. No bot can insert between them. This is the basis of `fire-jito.js`, `collect-jito.js`, `consolidate.js`, `buy-jito.js`, and `rescue-tokens.js`.
 
+## Reference docs
+
+- [**pump.fun V2 USDC Rollout reference**](./docs/v2-usdc-rollout/README.md) — full engineering reference for the 2026-05-21 V2 USDC quote-mint upgrade: instruction & event discriminators, byte layouts, parsing patterns, migration recipes, per-repo audit, and standalone executor prompts under [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/).
+
 ## License
 
 MIT
