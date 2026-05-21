@@ -8,10 +8,6 @@
        all-or-nothing pump.fun launching & fee collection
 -->
 
-<p align="center">
-  <img src="docs/assets/atomic-logo.svg" alt="ATOMIC — pump.fun atomic toolkit" width="720" />
-</p>
-
 ```
    █████╗ ████████╗ ██████╗ ███╗   ███╗██╗ ██████╗
   ██╔══██╗╚══██╔══╝██╔═══██╗████╗ ████║██║██╔════╝
