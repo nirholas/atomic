@@ -25,6 +25,17 @@ Atomic scripts for launching, collecting fees from, and trading pump.fun coins. 
 └── tsconfig.json              Type-checks src/lib/ + tools/
 ```
 
+## Docs
+
+The pages under [`docs/`](docs/) go deeper than this README:
+
+- [**docs/setup.md**](docs/setup.md) — wallets, funding, RPC choice, Jito tip refresh, troubleshooting.
+- [**docs/architecture.md**](docs/architecture.md) — funder vs creator, the 1232-byte tx-size constraint, bundle layouts, sweeper-bot threat model.
+- [**docs/recipes.md**](docs/recipes.md) — end-to-end flows: launch + auto-collect, rescue from leaked wallet, USDC distribution, etc.
+- [**docs/scripts/**](docs/scripts/) — one reference page per runnable file: env vars, tx layout, signing flow, failure modes.
+
+The [`docs/README.md`](docs/README.md) is the index.
+
 ## Setup
 
 ```bash
