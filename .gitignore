@@ -8,7 +8,21 @@ node_modules/
 !package.json
 !package-lock.json
 !tsconfig.json
+!tsconfig.*.json
+
+# Build output / caches
+dist/
+coverage/
+.vitest/
+.tsbuildinfo
+
+# Editor
+.vscode/
+.idea/
 
 # Logs
 *.log
 grind.log
+
+# OS
+.DS_Store

@@ -1,5 +1,5 @@
 /**
- * @pumpkit/core — Funding-source detection
+ * Funding-source detection.
  *
  * Determines whether a wallet was "seeded by pump.fun" — i.e. its first
  * inbound SOL transfer came from a known pump.fun source (fee recipient

@@ -10,7 +10,7 @@
  */
 
 import { Connection } from '@solana/web3.js';
-import { detectSeededByPump } from '../packages/core/src/solana/funding-source.js';
+import { detectSeededByPump } from '../src/lib/funding-source.js';
 
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';

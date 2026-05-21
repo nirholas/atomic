@@ -1,0 +1,39 @@
+{
+  "name": "pump-launch-toolkit",
+  "version": "0.1.0",
+  "description": "Atomic pump.fun launch + fee collection + buy/transfer scripts using Jito bundles",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "metadata": "node src/metadata.js",
+    "launch": "node src/fire-jito.js",
+    "launch-single": "node src/fire-atomic-create.js",
+    "collect": "node src/collect-jito.js",
+    "watch": "node src/watch-collect.js",
+    "buy": "node src/buy-jito.js",
+    "transfer-tokens": "node src/rescue-tokens.js",
+    "consolidate": "node src/consolidate.js",
+    "distribute": "node src/distribute.js",
+    "grind": "node src/grind.js",
+    "check-funding": "tsx tools/check-pump-funding.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nirholas/pump-sdk": "^1.30.0",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.3",
+    "bs58": "^6.0.0",
+    "form-data": "^4.0.5",
+    "node-fetch": "^2.7.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { PublicKey, type Connection } from '@solana/web3.js';
-import { detectSeededByPump } from '../solana/funding-source.js';
+import { detectSeededByPump } from './funding-source.js';
 import {
   PUMP_FEE_RECIPIENTS,
   PUMPFUN_FEE_ACCOUNT,
   PUMPFUN_MIGRATION_AUTHORITY,
-} from '../solana/programs.js';
+} from './programs.js';
 
 // ── Fixture helpers ────────────────────────────────────────────────────
 
