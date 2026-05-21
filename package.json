@@ -28,7 +28,7 @@
     "bn.js": "^5.2.3",
     "bs58": "^6.0.0",
     "form-data": "^4.0.5",
-    "node-fetch": "^2.7.0",
+    "node-fetch": "^3.3.2",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
