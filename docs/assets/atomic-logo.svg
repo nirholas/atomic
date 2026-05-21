@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="800" height="240" role="img" aria-label="ATOMIC animated logo">
+  <defs>
+    <linearGradient id="atomicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9945FF"/>
+      <stop offset="50%" stop-color="#14F195"/>
+      <stop offset="100%" stop-color="#00C2FF"/>
+    </linearGradient>
+    <radialGradient id="nucleusGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#14F195" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#9945FF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#9945FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="atomGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="800" height="240" fill="#0b0d12"/>
+
+  <g transform="translate(120,120)" filter="url(#atomGlow)">
+    <circle r="42" fill="url(#nucleusGrad)"/>
+    <circle r="9" fill="#14F195"/>
+
+    <g>
+      <ellipse rx="78" ry="28" fill="none" stroke="#9945FF" stroke-width="1.4" opacity="0.85"/>
+      <circle r="5" cx="78" cy="0" fill="#9945FF">
+        <animateMotion dur="3.2s" repeatCount="indefinite"
+          path="M 78 0 A 78 28 0 1 1 -78 0 A 78 28 0 1 1 78 0 Z"/>
+      </circle>
+      <animateTransform attributeName="transform" type="rotate"
+        from="0" to="360" dur="6s" repeatCount="indefinite"/>
+    </g>
+
+    <g transform="rotate(60)">
+      <ellipse rx="78" ry="28" fill="none" stroke="#00C2FF" stroke-width="1.4" opacity="0.85"/>
+      <circle r="5" cx="-78" cy="0" fill="#00C2FF">
+        <animateMotion dur="2.6s" repeatCount="indefinite"
+          path="M -78 0 A 78 28 0 1 0 78 0 A 78 28 0 1 0 -78 0 Z"/>
+      </circle>
+      <animateTransform attributeName="transform" type="rotate"
+        from="60" to="420" dur="5s" repeatCount="indefinite"/>
+    </g>
+
+    <g transform="rotate(120)">
+      <ellipse rx="78" ry="28" fill="none" stroke="#14F195" stroke-width="1.4" opacity="0.85"/>
+      <circle r="5" cx="78" cy="0" fill="#14F195">
+        <animateMotion dur="3.8s" repeatCount="indefinite"
+          path="M 78 0 A 78 28 0 1 1 -78 0 A 78 28 0 1 1 78 0 Z"/>
+      </circle>
+      <animateTransform attributeName="transform" type="rotate"
+        from="120" to="480" dur="7s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-weight="800">
+    <text x="240" y="148" font-size="92" fill="url(#atomicGrad)" letter-spacing="14">ATOMIC</text>
+    <text x="240" y="148" font-size="92" fill="none" stroke="#14F195" stroke-width="0.6" letter-spacing="14" opacity="0.35">ATOMIC
+      <animate attributeName="opacity" values="0.15;0.55;0.15" dur="3s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fill="#7a8190" font-size="14" letter-spacing="6">
+    <text x="244" y="186">JITO &#183; PUMP.FUN &#183; ALL-OR-NOTHING</text>
+  </g>
+
+  <g stroke="#1a1f2b" stroke-width="1">
+    <line x1="0" y1="220" x2="800" y2="220"/>
+    <line x1="0" y1="20"  x2="800" y2="20"/>
+  </g>
+</svg>
