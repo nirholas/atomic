@@ -5,11 +5,13 @@ Step-by-step walkthroughs for each major flow in the atomic toolkit. Each tutori
 All tutorials assume you've run setup once:
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 npm install
 cp .env.example .env
 # fill in RPC_URL and any other base vars; per-flow vars are passed inline in each tutorial
 ```
+
+### Per-flow walkthroughs
 
 | # | Tutorial | Script(s) | When you'd use it |
 |---|---|---|---|
@@ -21,9 +23,18 @@ cp .env.example .env
 | 06 | [Consolidate vault + wallets in one bundle](./06-consolidate-wallets.md) | `consolidate.js` | Retiring a coin or shutting down a leaked setup |
 | 07 | [Audit wallet provenance (pump.fun seeding)](./07-audit-wallet-provenance.md) | `tools/check-pump-funding.ts` | Forensics, anti-Sybil filtering |
 
+### Operational depth
+
+| # | Tutorial | Covers |
+|---|---|---|
+| 08 | [End-to-end coin lifecycle](./08-end-to-end-coin-lifecycle.md) | Launch → watcher → rewards → retire chained into one narrative; total cost breakdown |
+| 09 | [Jito bundle anatomy & troubleshooting](./09-jito-bundle-anatomy.md) | What's in a bundle, why landings fail, decision tree for diagnosing `Invalid` / non-landings |
+| 10 | [Production setup](./10-production-setup.md) | RPC choice, secret storage, supervisors (`pm2`/`systemd`), log rotation, alerting |
+| 11 | [Vanity address grinding](./11-vanity-address-grinding.md) | `solana-keygen grind` vs `grind.js`, prefix-length time tables, when to bother |
+
 ## Conventions
 
-- All commands assume you're in `tmp/leaked-launch/` unless the tutorial says otherwise (`07` is the only exception — it runs from repo root).
+- All commands run from the repo root. Scripts live in `src/`; `package.json` exposes `npm run <name>` shortcuts (see `package.json` for the full list).
 - Secrets are passed as env vars in the examples for readability. In practice, put them in `.env` (which is gitignored) and rely on `dotenv`.
 - `JITO_TIP=0.005` is the starting default everywhere. Bump to `0.01`–`0.02` if your bundles return `Invalid`.
 - Where a tutorial references another flow, the link uses the same numbering above.
