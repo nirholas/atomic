@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 /**
  * Fetch the live Jito Block Engine tip-account list and diff against the
- * hardcoded list in tmp/leaked-launch/fire-jito.js. Reports drift so the
- * hardcoded list can be updated before bundles start failing with:
+ * hardcoded list in src/fire-jito.js. Reports drift so the hardcoded list
+ * can be updated before bundles start failing with:
  *   "Bundles must write lock at least one tip account"
  *
  * Usage:
@@ -16,7 +16,7 @@
 
 const DEFAULT_BLOCK_ENGINE = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
 
-// Mirror of JITO_TIP_ACCOUNTS in tmp/leaked-launch/fire-jito.js as of last sync.
+// Mirror of JITO_TIP_ACCOUNTS in src/fire-jito.js as of last sync.
 // Update this constant when running this tool flags drift.
 const HARDCODED: readonly string[] = [
   '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   console.log();
   if (liveOnly.length > 0) {
     console.log(`${RED}${BOLD}DRIFT:${NC} ${liveOnly.length} live tip account(s) missing from hardcoded list.`);
-    console.log('Update JITO_TIP_ACCOUNTS in tmp/leaked-launch/fire-jito.js (and any other script that hardcodes the list) to include:');
+    console.log('Update JITO_TIP_ACCOUNTS in src/fire-jito.js (and any other script that hardcodes the list) to include:');
     for (const a of liveOnly) console.log(`  '${a}',`);
     process.exit(1);
   }

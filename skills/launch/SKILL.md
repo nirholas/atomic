@@ -7,7 +7,7 @@ description: Use when the user wants to launch a new pump.fun coin where the fee
 
 Launches a pump.fun coin where the **on-chain creator** (the address Solscan shows in the "from" field of the create tx) is a different wallet from the one supplying SOL for rent + tip. Useful when the creator key is shared/leaked or when you want clean on-chain attribution.
 
-## Scripts (all in `tmp/leaked-launch/`)
+## Scripts (all in `src/`)
 
 | Script | What it does |
 |---|---|
@@ -19,8 +19,9 @@ Pick `fire-jito.js` when you also want a `DEV_BUY_SOL` in the same atomic execut
 
 ## Setup
 
+Run all commands from the repo root — `package.json` lives there and defines npm scripts (`npm run launch`, `npm run collect`, etc.).
+
 ```bash
-cd tmp/leaked-launch
 npm install
 cp .env.example .env  # fill in
 ```
@@ -30,19 +31,19 @@ cp .env.example .env  # fill in
 ```bash
 # 1. Metadata → IPFS URI
 NAME="MyCoin" SYMBOL="MEME" IMAGE_PATH=./logo.png \
-  node metadata.js
+  npm run metadata
 # -> https://ipfs.io/ipfs/<CID>
 
 # 2a. Jito bundle launch
 URI="https://ipfs.io/ipfs/<CID>" NAME=MyCoin SYMBOL=MEME \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
 JITO_TIP=0.005 DEV_BUY_SOL=0 \
-  node fire-jito.js
+  npm run launch
 
 # 2b. OR single-tx create (no Jito)
 URI="https://ipfs.io/ipfs/<CID>" NAME=MyCoin SYMBOL=MEME \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
-  node fire-atomic-create.js
+  npm run launch-single
 ```
 
 ## Env vars

@@ -9,12 +9,13 @@ Distributes USDC to current holders of a pump.fun coin, with each holder's share
 
 ## Script
 
-`tmp/leaked-launch/distribute.js`
+`src/distribute.js`
 
 ## Setup
 
+Run all commands from the repo root — `package.json` lives there and defines npm scripts (`npm run launch`, `npm run collect`, etc.).
+
 ```bash
-cd tmp/leaked-launch
 npm install
 cp .env.example .env  # fill in
 ```
@@ -30,7 +31,7 @@ MINT=<your-coin-mint> \
 REWARD_PERCENT=80 \
 MIN_BPS=10 \
 FUNDER_SECRET=<base58-USDC-holder> \
-  node distribute.js
+  npm run distribute
 ```
 
 This pays out 80% of the funder wallet's USDC balance, weighted by sqrt(holder balance), to every holder with at least 0.1% (10 bps) of the supply.
@@ -42,7 +43,7 @@ MINT=<your-coin-mint> \
 EMERGENCY=1 \
 EMERGENCY_DESTINATION=<single-address> \
 FUNDER_SECRET=<base58-USDC-holder> \
-  node distribute.js
+  npm run distribute
 ```
 
 `EMERGENCY=1` skips holder weighting entirely and sends all USDC from the funder wallet to one address. Use when shutting down a rewards program or recovering from a misconfiguration.

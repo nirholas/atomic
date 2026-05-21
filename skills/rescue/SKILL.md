@@ -9,12 +9,13 @@ Transfers SPL or Token-2022 balances from a compromised wallet to a safe destina
 
 ## Script
 
-`tmp/leaked-launch/rescue-tokens.js`
+`src/rescue-tokens.js`
 
 ## Setup
 
+Run all commands from the repo root — `package.json` lives there and defines npm scripts (`npm run launch`, `npm run collect`, etc.).
+
 ```bash
-cd tmp/leaked-launch
 npm install
 cp .env.example .env  # fill in
 ```
@@ -26,7 +27,7 @@ SOURCE_SECRET=<base58>          # the leaked / compromised wallet
 DESTINATION=<safe-wallet>        # base58 pubkey
 MINT=<token-mint>                # base58 mint address
 JITO_TIP=0.005 \
-  node rescue-tokens.js
+  npm run transfer-tokens
 ```
 
 The script handles both classic SPL Token (Tokenkeg…) and Token-2022 (TokenzQd…) mints. It checks the mint's program ID and constructs the correct transfer instruction (including transfer-hook accounts for Token-2022 if present).

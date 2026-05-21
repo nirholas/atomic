@@ -20,12 +20,13 @@ The order matters. Each step is atomic on its own (Jito bundle), but between ste
 ### Step 1 — Sweep the creator vault
 Drains accrued pump.fun creator fees first; this is what same-key sweepers are most likely to hit.
 
+All commands run from the repo root (the root `package.json` defines the npm scripts).
+
 ```bash
-cd tmp/leaked-launch
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<clean-funder> CREATOR_SECRET=<leaked-creator> \
 JITO_TIP=0.01 \
-  node collect-jito.js
+  npm run collect
 ```
 
 Bump `JITO_TIP` to 0.02 if Jito returns `Invalid` — incidents tend to coincide with bundle congestion.
@@ -37,7 +38,7 @@ Sweeps any SOL still sitting in the creator + funder wallets to `DESTINATION` in
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<clean-funder> CREATOR_SECRET=<leaked-creator> \
 JITO_TIP=0.01 \
-  node consolidate.js
+  npm run consolidate
 ```
 
 ### Step 3 — Rescue token balances
@@ -49,7 +50,7 @@ DESTINATION=<safe-wallet> \
 MINT=<token-mint> \
 RENT_PAYER_SECRET=<clean-funder> \
 JITO_TIP=0.005 \
-  node rescue-tokens.js
+  npm run transfer-tokens
 ```
 
 Token-2022 mints with transfer hooks need their hook program known to the script — see [atomic-rescue](../../skills/rescue/SKILL.md) for the failure mode.
@@ -89,7 +90,7 @@ Expected: RED (not pump-seeded). If GREEN, you have a different problem — the 
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `Bundles must write lock at least one tip account` | Jito tip-account list rotated | Run `npx tsx tools/check-tip-accounts.ts`; update `JITO_TIP_ACCOUNTS` in `fire-jito.js` (and any other script that hardcodes the list) |
+| `Bundles must write lock at least one tip account` | Jito tip-account list rotated | Run `npx tsx tools/check-tip-accounts.ts`; update `JITO_TIP_ACCOUNTS` in `src/fire-jito.js` (and any other script that hardcodes the list) |
 | Bundle returns `Invalid` | Tip too low for current congestion | Bump `JITO_TIP` to 0.01–0.02 and retry |
 | `collect-jito` lands but vault still has SOL | Pump fee curve still emitting; not all accrual was collected in that block | Re-run; or switch to `watch-collect.js` |
 | `rescue-tokens` fails with `MissingAccount` | Token-2022 transfer hook needs extra accounts the script doesn't know | Find the hook program docs, add accounts manually as a follow-up tx (loses atomicity) |
