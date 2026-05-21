@@ -10,6 +10,37 @@ The root [`README.md`](../README.md) is the orientation page: it lists every scr
 - [**Architecture**](architecture.md) — the *why* behind the toolkit. Funder vs creator, the 1232-byte tx-size constraint, what's actually inside each Jito bundle, the sweeper-bot threat model.
 - [**Recipes**](recipes.md) — end-to-end flows: launching with auto-collect, rescuing tokens from a compromised wallet, distributing rewards, etc.
 
+## Deep technical reference
+
+When you need to reason about *how* the toolkit works under the hood, or troubleshoot something the recipes don't cover:
+
+- [**Jito bundle mechanics**](jito-bundle-mechanics.md) — bundle submission, tip auction, confirmation polling, all the failure modes and how to detect each one.
+- [**Transaction size budget**](transaction-size-budget.md) — the 1232-byte limit, per-instruction byte accounting, why bundles are forced on you, ALTs.
+- [**pump.fun protocol reference**](pump-fun-protocol.md) — program IDs, PDAs, every instruction the toolkit calls and its account list.
+- [**Keypair hygiene**](keypair-hygiene.md) — secrets handling, things that have actually leaked keys in real ops, rotation flows.
+- [**Cost model**](cost-model.md) — SOL cost per operation broken down by fee/tip/rent. Useful for sizing the funder wallet.
+- [**Monitoring**](monitoring.md) — polling vs WebSocket vs Geyser vs webhooks. How to observe pump.fun activity off-chain.
+- [**Glossary**](glossary.md) — quick reference for terms (funder, creator, vault, tip, etc.).
+
+## Operational runbooks
+
+When something goes wrong, start here. Each runbook is structured as a triage flow.
+
+- [**Bundle not landing**](runbooks/bundle-not-landing.md) — your Jito bundle was submitted but doesn't confirm.
+- [**RPC degraded**](runbooks/rpc-degraded.md) — `Blockhash not found`, slot lag, rate limits.
+- [**Tip too low**](runbooks/tip-too-low.md) — tuning the Jito tip in busy markets.
+- [**SDK version mismatch**](runbooks/sdk-version-mismatch.md) — `InvalidInstructionData` after a pump.fun program upgrade.
+- [**Leaked key response**](runbooks/leaked-key-response.md) — what to do *during* an active key leak.
+- [**Sweeper attack postmortem**](runbooks/sweeper-attack-postmortem.md) — recovery, forensics, prevention after a drain.
+
+## V2 USDC quote-mint upgrade
+
+The full engineering reference for the 2026-05-21 pump.fun V2 upgrade (instruction & event discriminators, byte layouts, migration recipes, per-repo audit) lives under [**docs/v2-usdc-rollout/**](v2-usdc-rollout/).
+
+## Tutorials
+
+Step-by-step walkthroughs for someone new to the toolkit live under [**tutorials/**](../tutorials/). The tutorials assume zero familiarity with this repo; the deep reference docs above assume you've at least used it once.
+
 ## Per-script reference
 
 One page per runnable file. Each page documents env vars, signing flow, the tx layout, exit conditions, and failure modes.
