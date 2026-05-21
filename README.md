@@ -1,3 +1,73 @@
+<!--
+   █████╗ ████████╗ ██████╗ ███╗   ███╗██╗ ██████╗
+  ██╔══██╗╚══██╔══╝██╔═══██╗████╗ ████║██║██╔════╝
+  ███████║   ██║   ██║   ██║██╔████╔██║██║██║
+  ██╔══██║   ██║   ██║   ██║██║╚██╔╝██║██║██║
+  ██║  ██║   ██║   ╚██████╔╝██║ ╚═╝ ██║██║╚██████╗
+  ╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝╚═╝ ╚═════╝
+       all-or-nothing pump.fun launching & fee collection
+-->
+
+<p align="center">
+  <img src="docs/assets/atomic-logo.svg" alt="ATOMIC — pump.fun atomic toolkit" width="720" />
+</p>
+
+```
+   █████╗ ████████╗ ██████╗ ███╗   ███╗██╗ ██████╗
+  ██╔══██╗╚══██╔══╝██╔═══██╗████╗ ████║██║██╔════╝
+  ███████║   ██║   ██║   ██║██╔████╔██║██║██║
+  ██╔══██║   ██║   ██║   ██║██║╚██╔╝██║██║██║
+  ██║  ██║   ██║   ╚██████╔╝██║ ╚═╝ ██║██║╚██████╗
+  ╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝╚═╝ ╚═════╝
+       all-or-nothing pump.fun launching & fee collection
+```
+
+<p align="center">
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-14F195?style=flat-square"></a>
+  <a href="#setup"><img alt="Node" src="https://img.shields.io/badge/node-%E2%89%A520-9945FF?style=flat-square&logo=node.js&logoColor=white"></a>
+  <img alt="Solana" src="https://img.shields.io/badge/chain-Solana-00C2FF?style=flat-square&logo=solana&logoColor=white">
+  <img alt="Jito" src="https://img.shields.io/badge/bundles-Jito-14F195?style=flat-square">
+  <img alt="pump.fun" src="https://img.shields.io/badge/protocol-pump.fun%20V2-9945FF?style=flat-square">
+  <img alt="Status" src="https://img.shields.io/badge/status-active-14F195?style=flat-square">
+</p>
+
+<p align="center"><i>Atomic create. Atomic collect. No window for a sweeper bot.</i></p>
+
+---
+
+## Table of contents
+
+- [What this is](#pump-launch-toolkit)
+- [At a glance](#at-a-glance)
+- [Layout](#layout)
+- [Docs](#docs)
+- [Setup](#setup)
+- [Scripts](#scripts)
+- [Typical launch flow](#typical-launch-flow)
+- [Collecting + auto-collecting](#collecting--auto-collecting)
+- [Environment variables](#environment-variables)
+- [Security notes](#security-notes)
+- [Architecture: why Jito bundles](#architecture-why-jito-bundles)
+- [Shared TS helpers (`src/lib/`)](#shared-ts-helpers-srclib)
+- [Tests](#tests)
+- [Glossary](#glossary)
+- [Reference docs](#reference-docs)
+- [License](#license)
+
+## At a glance
+
+|     |     |
+| --- | --- |
+| **Atomic launch** | funder pays rent + Jito tip in Tx1, creator signs `createV2` in Tx2 — both land or neither does |
+| **Atomic collect** | `collectCoinCreatorFee` + drain to safe wallet in one tx, so a leaked creator key can't be swept |
+| **MEV-aware** | every multi-step money flow runs inside a Jito bundle, so no searcher can interleave |
+| **Tiny surface** | plain CommonJS scripts under [`src/`](src/), TS helpers under [`src/lib/`](src/lib/), one CLI tool under [`tools/`](tools/) |
+| **Pure env-driven** | every script is configured with environment variables — copy [`.env.example`](.env.example) and go |
+
+<p align="center">
+  <img src="docs/assets/jito-bundle-flow.svg" alt="Jito bundle flow: funder + creator combine into one atomic bundle" width="820" />
+</p>
+
 # pump-launch-toolkit
 
 Atomic scripts for launching, collecting fees from, and trading pump.fun coins. Built around **Jito bundles** for atomicity across multiple txs — useful when:
@@ -78,6 +148,10 @@ JITO_TIP=0.005 \
 ```
 
 ## Collecting + auto-collecting
+
+<p align="center">
+  <img src="docs/assets/atomic-collect.svg" alt="Atomic collect: vault drains to destination in one tx; sweeper bot is locked out" width="820" />
+</p>
 
 ```bash
 # Manual one-shot
@@ -168,6 +242,34 @@ npm run typecheck      # tsc --noEmit
 ## Reference docs
 
 - [**pump.fun V2 USDC Rollout reference**](./docs/v2-usdc-rollout/README.md) — full engineering reference for the 2026-05-21 V2 USDC quote-mint upgrade: instruction & event discriminators, byte layouts, parsing patterns, migration recipes, per-repo audit, and standalone executor prompts under [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/).
+
+## Visual index
+
+| Visual | What it shows |
+|---|---|
+| ![ATOMIC logo](docs/assets/atomic-logo.svg) | Animated ATOMIC mark — three orbiting electron rings over a Solana-themed nucleus. |
+| ![Jito bundle flow](docs/assets/jito-bundle-flow.svg) | Funder + Creator → Jito bundle → on-chain atomic create. Same blockhash, one block engine decision. |
+| ![Atomic collect](docs/assets/atomic-collect.svg) | `collectCoinCreatorFee` + drain to destination in a single tx. Sweeper bot is locked out — no slot to insert. |
+
+All three live under [`docs/assets/`](docs/assets/) as standalone animated SVGs, so they render inline on GitHub and can be embedded into other docs or talks.
+
+## Command cheat-sheet
+
+| Goal | Command |
+|---|---|
+| Upload token metadata | `npm run metadata` |
+| Atomic launch (Jito) | `npm run launch` |
+| Single-tx launch (no Jito) | `npm run launch-single` |
+| One-shot creator-fee collect | `npm run collect` |
+| Long-running collect watcher | `npm run watch` |
+| Buy via Jupiter inside a bundle | `npm run buy` |
+| Atomic SPL/Token-2022 rescue | `npm run transfer-tokens` |
+| Drain creator + funder to destination | `npm run consolidate` |
+| Sqrt-weighted USDC distribution | `npm run distribute` |
+| Check whether a wallet was seeded by pump.fun | `npm run check-funding -- <wallet>` |
+| Vanity grinder (slow JS) | `npm run grind` |
+
+See [`Scripts`](#scripts) above for the full description of each command, and [`docs/scripts/`](docs/scripts/) for per-script reference pages (env vars, tx layout, signing flow, failure modes).
 
 ## License
 
