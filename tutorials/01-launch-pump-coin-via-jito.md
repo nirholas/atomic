@@ -21,13 +21,13 @@ This walkthrough covers the full path: metadata upload → Jito-bundle launch �
 The metadata script pushes name + symbol + image to pump.fun's IPFS endpoint and returns a URI you'll pass to the launcher.
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 NAME="MyCoin" \
 SYMBOL="MEME" \
 IMAGE_PATH=./logo.png \
 DESCRIPTION="A meme coin about cats" \
-  node metadata.js
+  npm run metadata
 ```
 
 Expected output:
@@ -48,7 +48,7 @@ FUNDER_SECRET=<base58-secret> \
 CREATOR_SECRET=<base58-secret> \
 JITO_TIP=0.005 \
 DEV_BUY_SOL=0 \
-  node fire-jito.js
+  npm run launch
 ```
 
 What happens under the hood:
@@ -82,7 +82,7 @@ NAME="MyCoin" \
 SYMBOL="MEME" \
 FUNDER_SECRET=<base58-secret> \
 CREATOR_SECRET=<base58-secret> \
-  node fire-atomic-create.js
+  npm run launch-single
 ```
 
 Here the funder is the fee payer of the create tx, and the creator co-signs but does not pay. On-chain `creator` field is still the creator wallet. Trade-off: no MEV protection, no dev buy, but cheaper and simpler.
@@ -115,7 +115,7 @@ If the dev buy was included, you should also see a `buy` instruction inside the 
 ## Gotchas
 
 - **Tx-size ceiling.** `createV2` is already near the 1232-byte limit. Adding rent transfer + Jito tip in the same tx blows it — that's why `fire-jito.js` splits into two txs in a bundle.
-- **Tip-account rotation.** Jito's tip account list can drift. If you see `Bundles must write lock at least one tip account`, fetch live `getTipAccounts` from Jito's Block Engine RPC and update the script's hardcoded list.
+- **Tip-account rotation.** Jito's tip account list can drift. If you see `Bundles must write lock at least one tip account`, run `npx tsx tools/check-tip-accounts.ts` to diff the live list against the hardcoded one, then update `src/fire-jito.js`. See [tutorial 09](./09-jito-bundle-anatomy.md) for the full debug flow.
 - **Funder leak.** If your funder key is also shared/leaked, drain it immediately after launch with `consolidate.js` — see [tutorial 06](./06-consolidate-wallets.md).
 - **V2-USDC pools.** Buy/sell flows changed for V2-USDC quote-mint coins. Read `docs/v2-usdc-rollout/` before editing buy logic in `fire-jito.js`.
 

@@ -20,13 +20,13 @@ You bought (or otherwise hold) SPL or Token-2022 tokens in a wallet whose secret
 ## Step 1 — Rescue full balance
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 SOURCE_SECRET=<base58>                    # leaked wallet
 DESTINATION=<safe-wallet-pubkey> \
 MINT=<token-mint> \
 JITO_TIP=0.005 \
-  node rescue-tokens.js
+  npm run transfer-tokens
 ```
 
 Omit `AMOUNT` to transfer the full balance.
@@ -58,7 +58,7 @@ DESTINATION=<safe-wallet-pubkey> \
 MINT=<token-mint> \
 AMOUNT=5000 \
 JITO_TIP=0.005 \
-  node rescue-tokens.js
+  npm run transfer-tokens
 ```
 
 `AMOUNT` is in UI units (the human-readable token amount, accounting for decimals). The script reads the mint's `decimals` field and converts to base units internally.
@@ -73,7 +73,7 @@ RENT_PAYER_SECRET=<base58>                # clean wallet with ~0.01 SOL
 DESTINATION=<safe-wallet-pubkey> \
 MINT=<token-mint> \
 JITO_TIP=0.005 \
-  node rescue-tokens.js
+  npm run transfer-tokens
 ```
 
 The rent payer covers Jito tip + ATA creation rent. `SOURCE_SECRET` only needs to sign the transfer.
@@ -87,7 +87,7 @@ for MINT in $(cat mints-to-rescue.txt); do
   DESTINATION=<safe-wallet-pubkey> \
   MINT=$MINT \
   JITO_TIP=0.005 \
-    node rescue-tokens.js
+    npm run transfer-tokens
 done
 ```
 

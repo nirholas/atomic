@@ -38,13 +38,13 @@ Before running, confirm:
 ## Step 2 — Run the consolidation
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 DESTINATION=<safe-wallet-pubkey> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
 JITO_TIP=0.01 \
-  node consolidate.js
+  npm run consolidate
 ```
 
 Notice the higher default tip (`0.01`) — this bundle is larger than a simple collect, and you're typically running it when you want guaranteed landing rather than penny-pinching on tips.

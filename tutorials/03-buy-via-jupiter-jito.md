@@ -22,14 +22,14 @@ The default way to buy a pump.fun coin is the SDK's `buy` instruction. That work
 ## Step 1 — Basic buy
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 TARGET_MINT=<base58-mint> \
 BUY_SOL=0.01 \
 SLIPPAGE_BPS=500 \
 FUNDER_SECRET=<base58> \
 JITO_TIP=0.005 \
-  node buy-jito.js
+  npm run buy
 ```
 
 `SLIPPAGE_BPS=500` means 5% slippage tolerance.

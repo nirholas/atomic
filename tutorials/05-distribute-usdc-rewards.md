@@ -35,13 +35,13 @@ If the holder count is huge (10k+), consider a higher `MIN_BPS` to keep the per-
 ## Step 2 — Normal sqrt-weighted distribution
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 MINT=<your-coin-mint> \
 REWARD_PERCENT=80 \
 MIN_BPS=10 \
 FUNDER_SECRET=<base58> \
-  node distribute.js
+  npm run distribute
 ```
 
 What this does:
@@ -75,7 +75,7 @@ MINT=<your-coin-mint> \
 EMERGENCY=1 \
 EMERGENCY_DESTINATION=<single-address> \
 FUNDER_SECRET=<base58> \
-  node distribute.js
+  npm run distribute
 ```
 
 This bypasses sqrt-weighting entirely and sends **all USDC from `FUNDER_SECRET`** to `EMERGENCY_DESTINATION`. Use for:

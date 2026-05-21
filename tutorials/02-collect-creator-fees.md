@@ -24,13 +24,13 @@ If the creator key is **shared or leaked**, the naive flow — collect to creato
 Use this to test the setup before running a long watcher, or for occasional manual sweeps:
 
 ```bash
-cd tmp/leaked-launch
+# All commands run from the repo root
 
 DESTINATION=<safe-wallet-pubkey> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
 JITO_TIP=0.005 \
-  node collect-jito.js
+  npm run collect
 ```
 
 What's in the single tx that goes into the Jito bundle:
@@ -63,7 +63,7 @@ FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
 MIN_COLLECT_SOL=0.05 \
 JITO_TIP=0.005 \
-  node watch-collect.js
+  npm run watch
 ```
 
 Output, looping every 30 s:

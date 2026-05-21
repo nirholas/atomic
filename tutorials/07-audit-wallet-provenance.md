@@ -19,13 +19,13 @@ This is a **direct-funding check only** — not transitive. A wallet seeded *via
 - Node + `tsx` installed (`npm i -g tsx` if missing).
 - An RPC endpoint. **Use Helius/Triton or another archive RPC** for any batch use — public mainnet rate-limits within a handful of wallets.
 
-This tool runs from the **repo root**, not `tmp/leaked-launch/`. It's the only tutorial that does.
+This tool runs from the **repo root**, like every other tutorial in this set.
 
 ## Step 1 — Basic check
 
 ```bash
 # From repo root
-npx tsx tools/check-pump-funding.ts <walletAddress>
+npm run check-funding -- <walletAddress>
 ```
 
 Output is color-coded:
@@ -38,14 +38,14 @@ Treat RED as **"not confirmed pump.fun seeded"**, not **"definitely not pump"**.
 ## Step 2 — With explicit RPC
 
 ```bash
-npx tsx tools/check-pump-funding.ts <walletAddress> https://your-rpc.example/
+npm run check-funding -- <walletAddress> https://your-rpc.example/
 ```
 
 Or via env:
 
 ```bash
 RPC_URL=https://your-rpc.example/ \
-  npx tsx tools/check-pump-funding.ts <walletAddress>
+  npm run check-funding -- <walletAddress>
 ```
 
 If neither the positional arg nor `RPC_URL` is set, the tool falls back to `https://api.mainnet-beta.solana.com`, which rate-limits fast.
