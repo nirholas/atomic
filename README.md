@@ -39,12 +39,18 @@
 
 - [What this is](#pump-launch-toolkit)
 - [At a glance](#at-a-glance)
+- [System architecture](#system-architecture)
 - [Layout](#layout)
 - [Docs](#docs)
 - [Setup](#setup)
 - [Scripts](#scripts)
 - [Typical launch flow](#typical-launch-flow)
 - [Collecting + auto-collecting](#collecting--auto-collecting)
+- [Consolidating creator vault, creator wallet, and funder](#consolidating-creator-vault-creator-wallet-and-funder)
+- [The 1232-byte wall](#the-1232-byte-wall)
+- [Sweeper-bot threat model](#sweeper-bot-threat-model)
+- [Rewards distribution](#rewards-distribution)
+- [Funding-source detection](#funding-source-detection)
 - [Environment variables](#environment-variables)
 - [Security notes](#security-notes)
 - [Architecture: why Jito bundles](#architecture-why-jito-bundles)
@@ -52,6 +58,8 @@
 - [Tests](#tests)
 - [Glossary](#glossary)
 - [Reference docs](#reference-docs)
+- [Visual index](#visual-index)
+- [Command cheat-sheet](#command-cheat-sheet)
 - [License](#license)
 
 ## At a glance
@@ -65,8 +73,18 @@
 | **Pure env-driven** | every script is configured with environment variables — copy [`.env.example`](.env.example) and go |
 
 <p align="center">
-  <img src="docs/assets/jito-bundle-flow.svg" alt="Jito bundle flow: funder + creator combine into one atomic bundle" width="820" />
+  <img src="docs/assets/jito-bundle-flow.svg" alt="Jito bundle flow: funder + creator combine into one atomic bundle, with byte sizes, signer counts, and slot timing" width="940" />
 </p>
+
+## System architecture
+
+A bird's-eye view of how the toolkit hangs together: operator → CLI/env → scripts → shared libs → external services.
+
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Atomic toolkit architecture: scripts, libs, tools, and external dependencies" width="1040" />
+</p>
+
+The system is intentionally **stateless** — no daemon, no database, no shared lock files. Every script is a single-shot process that reads env vars, talks to RPC + Jito, and exits. The only persistent state is on-chain (your wallets, your coin, your destination).
 
 # pump-launch-toolkit
 
@@ -169,6 +187,79 @@ MIN_COLLECT_SOL=0.05 \
   npm run watch
 ```
 
+## Consolidating creator vault, creator wallet, and funder
+
+When a coin is winding down — or a creator key is suspected compromised — `consolidate.js` does a **single Jito bundle** that drains all three balances (vault PDA, creator wallet, funder wallet) into the same `DESTINATION`. If any instruction fails, the whole bundle reverts and nothing settles. This is the cleanest way to close out a coin without giving sweeper bots a window to grab residuals.
+
+<p align="center">
+  <img src="docs/assets/consolidate-flow.svg" alt="Consolidate flow: vault + creator wallet + funder wallet all drain to destination in one bundle" width="940" />
+</p>
+
+```bash
+DESTINATION=<your-safe-wallet> \
+FUNDER_SECRET=<base58> \
+CREATOR_SECRET=<base58> \
+JITO_TIP=0.01 \
+  npm run consolidate
+```
+
+## The 1232-byte wall
+
+Solana transactions cap at **1232 bytes per packet**. A pump.fun `createV2` already runs ~1190 B by itself once you include the 19 accounts, the metadata URI, name, symbol, and any bundled buy. There is **no room** to also include a system transfer that funds the creator with rent SOL — so the obvious "one tx does it all" design fails outside the lab.
+
+Jito bundles solve this by splitting the work across **two transactions that share a blockhash and land in the same slot**, all-or-nothing. No MEV searcher can interleave between them.
+
+<p align="center">
+  <img src="docs/assets/tx-size-constraint.svg" alt="1232-byte tx size cap, with a naive single-tx that overflows and a two-tx bundle that fits" width="940" />
+</p>
+
+## Sweeper-bot threat model
+
+Sweeper bots watch known public/shared keys and pull funds within ~1 slot of any inbound transfer. The naive collect → wait → transfer flow loses every race. The atomic flow makes the race irrelevant — the bot polls an empty wallet forever, because the SOL never rests there.
+
+<p align="center">
+  <img src="docs/assets/threat-model.svg" alt="Side-by-side timeline: naive two-step collect loses to sweeper; atomic single-tx collect leaves the bot empty-handed" width="940" />
+</p>
+
+| Threat | Naive flow | Atomic flow |
+|---|---|---|
+| Leaked creator key | sweeper drains creator wallet between collect and transfer | SOL never rests in the creator wallet |
+| Buy-and-hold from a shared key | tokens land in a watched ATA, swept in seconds | bundle the buy with a transfer to a private destination |
+| Token-2022 sweep | sweeper moves tokens out of the buyer ATA | rescue-tokens.js bundles the SPL transfer atomically |
+| Front-run on launch | bot inserts between funding and create | shared-blockhash bundle leaves no slot to insert into |
+
+## Rewards distribution
+
+`distribute.js` pays USDC rewards back to holders proportional to **`sqrt(balance)`** — a square-root curve dampens whale dominance without disenfranchising small holders. Holders below `MIN_BPS` are skipped; an `EMERGENCY` mode collapses the pool to a single address.
+
+<p align="center">
+  <img src="docs/assets/distribute-rewards.svg" alt="Sqrt-weighted USDC rewards distribution to holders, with MIN_BPS filter and emergency mode" width="940" />
+</p>
+
+```bash
+MINT=<your-mint> \
+REWARD_PERCENT=50 \
+MIN_BPS=10 \
+DESTINATION=<funded-payer> \
+FUNDER_SECRET=<base58> \
+  npm run distribute
+```
+
+## Funding-source detection
+
+`detectSeededByPump` (in [`src/lib/funding-source.ts`](src/lib/funding-source.ts)) walks a wallet's signatures back to its oldest tx, finds the first inbound SOL transfer, and checks the sender against the canonical pump.fun fee-recipient set + migration authority. Useful for forensics, leak-attribution, and sanity-checking a fresh creator wallet.
+
+<p align="center">
+  <img src="docs/assets/funding-source-walk.svg" alt="detectSeededByPump signature walk: classify the first inbound funder against pump.fun fee recipient set" width="940" />
+</p>
+
+```bash
+# CLI wrapper
+npm run check-funding -- <wallet-pubkey>
+# -> verdict: SEEDED BY PUMP.FUN  /  NOT SEEDED
+# -> firstFunder, amount, slot, signature
+```
+
 ## Environment variables
 
 All variables can be supplied via shell env or a `.env` file at the repo root. See [`.env.example`](.env.example) for a copy-paste template.
@@ -245,13 +336,19 @@ npm run typecheck      # tsc --noEmit
 
 ## Visual index
 
-| Visual | What it shows |
-|---|---|
-| ![ATOMIC logo](docs/assets/atomic-logo.svg) | Animated ATOMIC mark — three orbiting electron rings over a Solana-themed nucleus. |
-| ![Jito bundle flow](docs/assets/jito-bundle-flow.svg) | Funder + Creator → Jito bundle → on-chain atomic create. Same blockhash, one block engine decision. |
-| ![Atomic collect](docs/assets/atomic-collect.svg) | `collectCoinCreatorFee` + drain to destination in a single tx. Sweeper bot is locked out — no slot to insert. |
+All visuals live under [`docs/assets/`](docs/assets/) as standalone animated SVGs (no JS, no external assets). They render inline on GitHub and can be embedded into other docs, slide decks, or talks.
 
-All three live under [`docs/assets/`](docs/assets/) as standalone animated SVGs, so they render inline on GitHub and can be embedded into other docs or talks.
+| # | Visual | Section | Shows |
+|---|---|---|---|
+| 00 | [![logo](docs/assets/atomic-logo.svg)](docs/assets/atomic-logo.svg) | top-of-readme | Hero mark — orbiting electrons over a Solana-themed nucleus, status pill, feature strip. |
+| 01 | [![bundle](docs/assets/jito-bundle-flow.svg)](docs/assets/jito-bundle-flow.svg) | [At a glance](#at-a-glance) | Funder + Creator → Jito bundle → block engine → on-chain. Byte sizes, signer counts, slot timeline. |
+| 02 | [![collect](docs/assets/atomic-collect.svg)](docs/assets/atomic-collect.svg) | [Collecting](#collecting--auto-collecting) | One-tx collect + drain. Sweeper bot retries shown failing tick-by-tick. |
+| 03 | [![consolidate](docs/assets/consolidate-flow.svg)](docs/assets/consolidate-flow.svg) | [Consolidate](#consolidating-creator-vault-creator-wallet-and-funder) | Three sources (vault, creator, funder) → one bundle → destination. |
+| 04 | [![tx-size](docs/assets/tx-size-constraint.svg)](docs/assets/tx-size-constraint.svg) | [1232-byte wall](#the-1232-byte-wall) | Why a single tx overflows the packet cap, and how a two-tx bundle fits. |
+| 05 | [![funding](docs/assets/funding-source-walk.svg)](docs/assets/funding-source-walk.svg) | [Funding-source detection](#funding-source-detection) | `detectSeededByPump` walking signatures back to first inbound SOL. |
+| 06 | [![distribute](docs/assets/distribute-rewards.svg)](docs/assets/distribute-rewards.svg) | [Rewards](#rewards-distribution) | Sqrt-weighted USDC distribution, MIN_BPS filter, EMERGENCY mode. |
+| 07 | [![threat](docs/assets/threat-model.svg)](docs/assets/threat-model.svg) | [Threat model](#sweeper-bot-threat-model) | Naive vs atomic timeline of a leaked-key sweep race. |
+| 08 | [![arch](docs/assets/architecture.svg)](docs/assets/architecture.svg) | [System architecture](#system-architecture) | Operator → CLI/env → scripts → libs → external (RPC, Jito, pump.fun, Jupiter). |
 
 ## Command cheat-sheet
 

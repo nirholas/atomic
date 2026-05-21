@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" width="1100" height="520" role="img" aria-label="Sweeper bot threat-model timeline: naive vs atomic">
+  <defs>
+    <linearGradient id="tBad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"  stop-color="#FF3B6B"/>
+      <stop offset="100%" stop-color="#FF8A3B"/>
+    </linearGradient>
+    <linearGradient id="tGood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"  stop-color="#9945FF"/>
+      <stop offset="100%" stop-color="#14F195"/>
+    </linearGradient>
+    <radialGradient id="bg7" cx="50%" cy="0%" r="100%">
+      <stop offset="0%"  stop-color="#101627"/>
+      <stop offset="100%" stop-color="#08090d"/>
+    </radialGradient>
+    <filter id="tSoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="520" fill="url(#bg7)"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="40"  y="38" fill="#FF3B6B" font-size="14" letter-spacing="3">FIG.&#160;07</text>
+    <text x="120" y="38" fill="#e6e9ef" font-size="18" letter-spacing="2" font-weight="700">THREAT MODEL &#8212; SWEEPER BOT VS ATOMIC</text>
+    <text x="120" y="56" fill="#7a8190" font-size="11">side-by-side timeline of a leaked-key sweep race</text>
+  </g>
+
+  <g stroke="#1d2536" stroke-width="1"><line x1="40" y1="80" x2="1060" y2="80"/></g>
+
+  <!-- NAIVE TRACK -->
+  <g font-family="ui-monospace, monospace">
+    <text x="40" y="116" fill="#FF8A3B" font-size="12" letter-spacing="3">NAIVE &#8212; TWO-STEP COLLECT</text>
+    <text x="40" y="132" fill="#5a6373" font-size="10">collect now, transfer later. sweeper bot listens for any inbound at the leaked address.</text>
+  </g>
+
+  <!-- timeline rail naive -->
+  <line x1="60" y1="180" x2="1040" y2="180" stroke="#1d2536" stroke-width="2"/>
+
+  <!-- step ticks naive -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#7a8190">
+    <line x1="60"   y1="172" x2="60"   y2="188" stroke="#7a8190"/>
+    <text x="60" y="206" text-anchor="middle">t=0</text>
+    <line x1="280"  y1="172" x2="280"  y2="188" stroke="#7a8190"/>
+    <text x="280" y="206" text-anchor="middle">t+1 slot</text>
+    <line x1="500"  y1="172" x2="500"  y2="188" stroke="#7a8190"/>
+    <text x="500" y="206" text-anchor="middle">t+2 slots</text>
+    <line x1="720"  y1="172" x2="720"  y2="188" stroke="#7a8190"/>
+    <text x="720" y="206" text-anchor="middle">t+3 slots</text>
+    <line x1="940"  y1="172" x2="940"  y2="188" stroke="#7a8190"/>
+    <text x="940" y="206" text-anchor="middle">t+4 slots</text>
+  </g>
+
+  <!-- naive events -->
+  <g>
+    <circle cx="60"  cy="180" r="9" fill="#9945FF"/>
+    <text x="60" y="156" text-anchor="middle" fill="#9945FF" font-family="ui-monospace, monospace" font-size="10" font-weight="700">collectFee</text>
+
+    <circle cx="280" cy="180" r="9" fill="#00C2FF"/>
+    <text x="280" y="156" text-anchor="middle" fill="#00C2FF" font-family="ui-monospace, monospace" font-size="10" font-weight="700">SOL lands in creator</text>
+
+    <!-- sweeper grab -->
+    <g>
+      <polygon points="500,180 484,164 484,196" fill="#FF3B6B">
+        <animateTransform attributeName="transform" type="scale" values="0.6;1.4;0.6" dur="1.6s" repeatCount="indefinite" additive="sum"/>
+      </polygon>
+      <text x="500" y="156" text-anchor="middle" fill="#FF3B6B" font-family="ui-monospace, monospace" font-size="10" font-weight="700">SWEEPER GRABS</text>
+      <text x="500" y="232" text-anchor="middle" fill="#FF8A3B" font-family="ui-monospace, monospace" font-size="9">leaked key signs first &#8226; sub-second</text>
+    </g>
+
+    <!-- intended transfer (too late) -->
+    <circle cx="940" cy="180" r="9" fill="none" stroke="#5a6373" stroke-dasharray="2 2"/>
+    <text x="940" y="156" text-anchor="middle" fill="#5a6373" font-family="ui-monospace, monospace" font-size="10">your transfer &#8212; fails (0 balance)</text>
+  </g>
+
+  <!-- naive verdict -->
+  <g transform="translate(40,254)">
+    <rect x="0" y="0" width="1020" height="36" rx="6" fill="#150c11" stroke="#FF3B6B" stroke-width="1.2"/>
+    <text x="14" y="22" fill="#FF3B6B" font-family="ui-monospace, monospace" font-size="11" font-weight="700">OUTCOME &#8212; SOL stolen, your tx wastes priority fees, attacker keeps farming the address</text>
+  </g>
+
+  <!-- ATOMIC TRACK -->
+  <g font-family="ui-monospace, monospace">
+    <text x="40" y="332" fill="#14F195" font-size="12" letter-spacing="3">ATOMIC &#8212; collect + drain INSIDE one tx</text>
+    <text x="40" y="348" fill="#5a6373" font-size="10">SOL never rests at the leaky key. sweeper has nothing to grab between IXs of a single tx.</text>
+  </g>
+
+  <line x1="60" y1="392" x2="1040" y2="392" stroke="#1d2536" stroke-width="2"/>
+
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#7a8190">
+    <line x1="60"   y1="384" x2="60"   y2="400" stroke="#7a8190"/>
+    <text x="60" y="418" text-anchor="middle">t=0</text>
+    <line x1="280"  y1="384" x2="280"  y2="400" stroke="#7a8190"/>
+    <text x="280" y="418" text-anchor="middle">t+IX1</text>
+    <line x1="500"  y1="384" x2="500"  y2="400" stroke="#7a8190"/>
+    <text x="500" y="418" text-anchor="middle">t+IX2</text>
+    <line x1="720"  y1="384" x2="720"  y2="400" stroke="#7a8190"/>
+    <text x="720" y="418" text-anchor="middle">t+slot end</text>
+  </g>
+
+  <!-- atomic window highlight -->
+  <rect x="60" y="376" width="460" height="32" rx="6" fill="#14F195" opacity="0.12"/>
+  <rect x="60" y="376" width="460" height="32" rx="6" fill="none" stroke="#14F195" stroke-width="1"/>
+  <text x="290" y="396" text-anchor="middle" fill="#14F195" font-family="ui-monospace, monospace" font-size="11" font-weight="700">ATOMIC WINDOW &#8212; sweeper cannot insert here</text>
+
+  <!-- atomic events -->
+  <g>
+    <circle cx="60"  cy="392" r="9" fill="#9945FF"/>
+    <text x="60" y="368" text-anchor="middle" fill="#9945FF" font-family="ui-monospace, monospace" font-size="10" font-weight="700">collectFee</text>
+
+    <circle cx="280" cy="392" r="9" fill="#00C2FF"/>
+    <text x="280" y="368" text-anchor="middle" fill="#00C2FF" font-family="ui-monospace, monospace" font-size="10" font-weight="700">drain in same tx</text>
+
+    <circle cx="500" cy="392" r="9" fill="#14F195"/>
+    <text x="500" y="368" text-anchor="middle" fill="#14F195" font-family="ui-monospace, monospace" font-size="10" font-weight="700">settled at destination</text>
+
+    <!-- bot frantic -->
+    <g transform="translate(700,392)">
+      <circle r="10" fill="#0b0d12" stroke="#FF3B6B" stroke-width="1.6">
+        <animate attributeName="r" values="6;12;6" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+      <text x="0" y="4" text-anchor="middle" fill="#FF3B6B" font-family="ui-monospace, monospace" font-size="11" font-weight="700">&#10007;</text>
+      <text x="0" y="-22" text-anchor="middle" fill="#FF8A3B" font-family="ui-monospace, monospace" font-size="10" font-weight="700">bot polls &#8212; empty</text>
+    </g>
+  </g>
+
+  <!-- atomic verdict -->
+  <g transform="translate(40,448)">
+    <rect x="0" y="0" width="1020" height="36" rx="6" fill="#0d180f" stroke="#14F195" stroke-width="1.2"/>
+    <text x="14" y="22" fill="#14F195" font-family="ui-monospace, monospace" font-size="11" font-weight="700">OUTCOME &#8212; SOL settled at safe destination, bot retries forever and gets nothing</text>
+  </g>
+
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#5a6373">
+    <text x="40" y="504">applies to: collect-jito.js &#183; consolidate.js &#183; buy-jito.js (buy-and-transfer) &#183; rescue-tokens.js</text>
+  </g>
+</svg>
