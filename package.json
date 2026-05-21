@@ -16,6 +16,7 @@
     "distribute": "node src/distribute.js",
     "grind": "node src/grind.js",
     "check-funding": "tsx tools/check-pump-funding.ts",
+    "sanity": "tsx tools/sanity-check.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
