@@ -22,22 +22,21 @@ Skip this skill for non-pump tasks, generic Solana tx construction, or anything 
 
 ## Layout
 
-- `tmp/leaked-launch/` — runnable scripts. `npm install` here, not at the repo root.
-- `tmp/leaked-launch-clean/` — sanitized mirror of the same scripts (no local state). Use this when copying out of the repo.
-- `tools/check-pump-funding.ts` — standalone TS tool, run with `tsx`.
-- `packages/core/src/solana/` — shared helpers (e.g. `detectSeededByPump`) imported by the tools.
+- `src/` — runnable scripts (post-restructure home; the old `tmp/leaked-launch/` tree).
+- `src/lib/` — shared TypeScript helpers (e.g. `detectSeededByPump`) imported by the tools.
+- `tools/` — standalone TypeScript utilities run with `tsx`: `check-pump-funding.ts` (provenance), `check-tip-accounts.ts` (Jito drift), `check-balances.ts` (wallet balance audit).
+- `docs/runbooks/` — incident playbooks (leaked-key response, etc.).
 - `docs/v2-usdc-rollout/` — context on the V2 USDC pool migration; read before touching buy/sell flows.
 
 ## Setup
 
 ```bash
-cd tmp/leaked-launch
-npm install
-cp .env.example .env
-# fill .env — never commit it
+npm install               # at repo root — root package.json defines all scripts
+cp .env.example .env      # fill in
+# never commit .env
 ```
 
-Required base vars: `RPC_URL`, `FUNDER_SECRET`, `CREATOR_SECRET` (base58) or `FUNDER_KEYPAIR` / `CREATOR_KEYPAIR` (JSON file paths). Per-flow vars listed below.
+Required base vars: `RPC_URL`, `FUNDER_SECRET`, `CREATOR_SECRET` (base58) or `FUNDER_KEYPAIR` / `CREATOR_KEYPAIR` (JSON file paths). Per-flow vars listed below. The root `package.json` exposes npm scripts (`npm run launch`, `npm run collect`, etc.) — see `package.json` for the full list.
 
 ## Script index
 
@@ -56,16 +55,15 @@ Required base vars: `RPC_URL`, `FUNDER_SECRET`, `CREATOR_SECRET` (base58) or `FU
 
 ## Typical flows
 
-**Launch (Jito):**
+**Launch (Jito):** run from repo root.
 
 ```bash
-cd tmp/leaked-launch
-NAME="MyCoin" SYMBOL="MEME" IMAGE_PATH=./logo.png node metadata.js
+NAME="MyCoin" SYMBOL="MEME" IMAGE_PATH=./logo.png npm run metadata
 # -> https://ipfs.io/ipfs/<CID>
 
 URI="https://ipfs.io/ipfs/<CID>" NAME=MyCoin SYMBOL=MEME \
 FUNDER_SECRET=... CREATOR_SECRET=... JITO_TIP=0.005 \
-  node fire-jito.js
+  npm run launch
 ```
 
 **Auto-collect for a leaked creator key:**
@@ -73,7 +71,7 @@ FUNDER_SECRET=... CREATOR_SECRET=... JITO_TIP=0.005 \
 ```bash
 DESTINATION=<safe-wallet> CREATOR_PUBKEY=<base58> MIN_COLLECT_SOL=0.05 \
 FUNDER_SECRET=... CREATOR_SECRET=... \
-  node watch-collect.js
+  npm run watch
 ```
 
 **Provenance audit (no Jito needed):**

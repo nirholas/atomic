@@ -1,0 +1,78 @@
+# atomic — pump.fun launch & fee-collection toolkit (LLM-friendly entry point)
+
+> Node scripts that wrap pump.fun token creation, creator-fee collection, buying via Jupiter, SPL/Token-2022 rescue, and USDC reward distribution in **Jito bundles** for atomicity across multiple txs. Used when single-tx flows are over the 1232-byte limit, racing a sweeper bot, or leaking SOL through an intermediate wallet.
+
+This file is a flat index to help LLMs and AI coding assistants navigate the repo without crawling all files. Read [`AGENTS.md`](./AGENTS.md) and [`CLAUDE.md`](./CLAUDE.md) for usage instructions specifically targeted at AI assistants.
+
+## What this repo does
+
+Five flows, all atomic via Jito bundles:
+
+- **Launch** (`src/fire-jito.js`, `src/fire-atomic-create.js`): create a pump.fun coin where the on-chain `creator` field is a different wallet from the SOL-providing funder.
+- **Collect** (`src/collect-jito.js`, `src/watch-collect.js`, `src/consolidate.js`): pull creator fees from the vault and immediately drain to a safe wallet in one tx — no window for a competing key-holder.
+- **Buy** (`src/buy-jito.js`): route a pump.fun token purchase through Jupiter inside a Jito bundle, useful when pump-sdk's buy ix is out of sync with the on-chain program.
+- **Rescue** (`src/rescue-tokens.js`): atomically move SPL or Token-2022 balances out of a leaked-key wallet without giving sweeper bots a window to insert.
+- **Distribute** (`src/distribute.js`): sqrt-weighted USDC payouts to holders, with an `EMERGENCY` single-target sweep mode.
+
+Plus four standalone tools:
+
+- `tools/check-pump-funding.ts` — was this wallet seeded by pump.fun?
+- `tools/check-tip-accounts.ts` — current Jito tip accounts (refresh stale lists).
+- `tools/check-balances.ts` — SOL + SPL/Token-2022 balances for a wallet.
+- `tools/sanity-check.ts` — no-spend pre-flight: validates env vars and signing keys.
+
+## Top-level files
+
+- [`README.md`](./README.md) — public-facing project README with quickstart and security notes.
+- [`SECURITY.md`](./SECURITY.md) — threat model, secret handling, vulnerability disclosure.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — code style, commit conventions, manual-testing requirements.
+- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) — community norms.
+- [`CHANGELOG.md`](./CHANGELOG.md) — date-based changelog.
+- [`LICENSE`](./LICENSE) — MIT.
+- [`AGENTS.md`](./AGENTS.md) — instructions for AI coding agents (Codex, etc.).
+- [`CLAUDE.md`](./CLAUDE.md) — instructions for Claude Code specifically.
+- [`SKILL.md`](./SKILL.md) — root Claude skill description.
+- [`FAQ.md`](./FAQ.md), [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md), [`GLOSSARY.md`](./GLOSSARY.md), [`ROADMAP.md`](./ROADMAP.md) — supplementary references.
+- [`.env.example`](./.env.example) — every env var the scripts read.
+
+## Directory map
+
+- [`src/`](./src/) — runnable Node scripts. `npm install` lives at repo root; scripts run via `npm run <name>`.
+- [`src/lib/`](./src/lib/) — shared TS helpers (`funding-source.ts`, `programs.ts`).
+- [`tools/`](./tools/) — standalone TS CLI tools, run via `tsx`.
+- [`skills/`](./skills/) — Claude Code skills: launch, collect, buy, rescue, distribute, audit, consolidate, watch, metadata, grind, funding-source.
+- [`docs/`](./docs/) — reference documentation.
+- [`docs/setup.md`](./docs/setup.md), [`docs/architecture.md`](./docs/architecture.md), [`docs/recipes.md`](./docs/recipes.md) — top-level guides.
+- [`docs/scripts/`](./docs/scripts/) — per-script reference.
+- [`docs/runbooks/`](./docs/runbooks/) — incident response playbooks.
+- [`docs/v2-usdc-rollout/`](./docs/v2-usdc-rollout/) — 2026-05-21 V2 USDC upgrade engineering reference.
+- [`docs/concepts/`](./docs/concepts/) — bonding-curve, graduation, creator-fees, fee-sharing, cashback, mayhem-mode.
+- [`docs/security/`](./docs/security/) — threat model, key management, incident response.
+- [`docs/operations/`](./docs/operations/) — RPC providers, Jito tips, cost estimates, monitoring.
+- [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/) — standalone executor prompts for V2 USDC rollout work.
+- [`tutorials/`](./tutorials/) — numbered, hands-on guides.
+- [`examples/`](./examples/) — short runnable JS snippets demonstrating each script's call surface.
+- [`.github/`](./.github/) — CI workflows, issue templates, PR template, FUNDING, CODEOWNERS.
+
+## Key concepts
+
+- **Funder vs. creator.** The "funder" pays SOL for rent + Jito tip. The "creator" is the on-chain identity Solscan displays as the coin's origin. The atomic patterns let those be different wallets.
+- **Jito bundles.** Multiple txs sharing a blockhash that land all-or-nothing on Jito's Block Engine. Pays a tip ix (default ≥ 0.001 SOL) to a rotating tip account. Defeats MEV/sweeper races by leaving no window between txs.
+- **Sweeper bots.** Watch public/leaked private keys and drain any SOL or tokens that *rest* in those wallets within seconds. The atomic patterns ensure funds pass through, never settle, on leaked keys.
+- **pump.fun V2 USDC rollout (2026-05-21).** USDC-paired coins require V2 instructions with a `quote_mint` argument. SOL-paired coins keep V1 working. See [`docs/v2-usdc-rollout/`](./docs/v2-usdc-rollout/).
+
+## Common task → file map
+
+| Task | Start with |
+|------|-----------|
+| Launch a new coin | [`src/fire-jito.js`](./src/fire-jito.js), then [`docs/scripts/fire-jito.md`](./docs/scripts/fire-jito.md). |
+| Collect creator fees atomically | [`src/collect-jito.js`](./src/collect-jito.js), then [`docs/scripts/collect-jito.md`](./docs/scripts/collect-jito.md). |
+| Auto-collect on a schedule | [`src/watch-collect.js`](./src/watch-collect.js), [`docs/scripts/watch-collect.md`](./docs/scripts/watch-collect.md). |
+| Drain everything (vault + creator + funder) | [`src/consolidate.js`](./src/consolidate.js). |
+| Buy when pump-sdk drifts | [`src/buy-jito.js`](./src/buy-jito.js) via Jupiter. |
+| Rescue tokens from a leaked wallet | [`src/rescue-tokens.js`](./src/rescue-tokens.js). |
+| Pay out USDC rewards | [`src/distribute.js`](./src/distribute.js). |
+| Audit a wallet's funding source | [`tools/check-pump-funding.ts`](./tools/check-pump-funding.ts). |
+| Pre-flight sanity check | [`tools/sanity-check.ts`](./tools/sanity-check.ts). |
+| Handle the V2 USDC upgrade | [`docs/v2-usdc-rollout/README.md`](./docs/v2-usdc-rollout/README.md). |
+| Respond to a leaked key | [`docs/runbooks/leaked-key-response.md`](./docs/runbooks/leaked-key-response.md). |

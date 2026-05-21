@@ -9,12 +9,13 @@ Buys a token using Jupiter as the router, wrapped in a Jito bundle so the buy + 
 
 ## Script
 
-`tmp/leaked-launch/buy-jito.js`
+`src/buy-jito.js`
 
 ## Setup
 
+Run all commands from the repo root — `package.json` lives there and defines npm scripts (`npm run launch`, `npm run collect`, etc.).
+
 ```bash
-cd tmp/leaked-launch
 npm install
 cp .env.example .env  # fill in
 ```
@@ -27,7 +28,7 @@ BUY_SOL=0.01 \
 SLIPPAGE_BPS=500 \
 FUNDER_SECRET=<base58> \
 JITO_TIP=0.005 \
-  node buy-jito.js
+  npm run buy
 ```
 
 `SLIPPAGE_BPS=500` = 5%. Lower it to 100–200 for stable pools, raise to 1000+ for fresh launches with extreme volatility.

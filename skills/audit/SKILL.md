@@ -11,11 +11,11 @@ Determines whether a Solana wallet was seeded by pump.fun (i.e. its first incomi
 
 `tools/check-pump-funding.ts` (standalone TypeScript, run with `tsx`)
 
-The detection logic lives in `packages/core/src/solana/funding-source.ts` (`detectSeededByPump`). Import it directly if you're building on top.
+The detection logic lives in `src/lib/funding-source.ts` (`detectSeededByPump`). Import it directly if you're building on top.
 
 ## Setup
 
-The tool runs from the repo root, not the `tmp/leaked-launch/` dir:
+The tool runs from the repo root, not the `src/` dir:
 
 ```bash
 # At repo root
@@ -48,14 +48,14 @@ The default RPC is `https://api.mainnet-beta.solana.com` if neither the position
 
 ```ts
 import { Connection } from '@solana/web3.js';
-import { detectSeededByPump } from './packages/core/src/solana/funding-source.js';
+import { detectSeededByPump } from './src/lib/funding-source.js';
 
 const conn = new Connection(process.env.RPC_URL!);
 const result = await detectSeededByPump(conn, walletPubkey);
 // result tells you whether and how pump.fun seeded the wallet
 ```
 
-Check the type signature in `packages/core/src/solana/funding-source.ts` — the returned shape includes the originating tx and source address when positive.
+Check the type signature in `src/lib/funding-source.ts` — the returned shape includes the originating tx and source address when positive.
 
 ## When to use
 

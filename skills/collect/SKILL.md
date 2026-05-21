@@ -7,7 +7,7 @@ description: Use when the user wants to collect pump.fun creator fees atomically
 
 Collects accumulated creator fees from pump.fun's `coinCreatorVault` PDA and immediately moves the SOL to a safe destination, in one atomic tx. Designed for the case where the creator key is shared or leaked: any non-atomic flow leaves a window where another key-holder calls `collectCoinCreatorFee` first.
 
-## Scripts (all in `tmp/leaked-launch/`)
+## Scripts (all in `src/`)
 
 | Script | What it does |
 |---|---|
@@ -17,8 +17,9 @@ Collects accumulated creator fees from pump.fun's `coinCreatorVault` PDA and imm
 
 ## Setup
 
+Run all commands from the repo root — `package.json` lives there and defines npm scripts (`npm run launch`, `npm run collect`, etc.).
+
 ```bash
-cd tmp/leaked-launch
 npm install
 cp .env.example .env  # fill in
 ```
@@ -31,7 +32,7 @@ cp .env.example .env  # fill in
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
 JITO_TIP=0.005 \
-  node collect-jito.js
+  npm run collect
 ```
 
 **Long-running watcher (recommended for leaked keys):**
@@ -41,7 +42,7 @@ DESTINATION=<safe-wallet> \
 CREATOR_PUBKEY=<base58-pubkey> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
 MIN_COLLECT_SOL=0.05 \
-  node watch-collect.js
+  npm run watch
 ```
 
 `MIN_COLLECT_SOL` should exceed Jito tip + tx fee so each cycle is net-positive. 0.05 is a sane floor; lower it to 0.02 if vault accrual is slow but consistent.
@@ -52,7 +53,7 @@ MIN_COLLECT_SOL=0.05 \
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
 JITO_TIP=0.01 \
-  node consolidate.js
+  npm run consolidate
 ```
 
 After this, the creator and funder wallets have only rent-exempt minimums. If you also want to extract that, you must close the wallets (delete their accounts), which the script does not do automatically.
