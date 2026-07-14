@@ -269,4 +269,4 @@ See [`Scripts`](#scripts) above for the full description of each command, and [`
 
 ## License
 
-MIT
+All rights reserved. See [LICENSE](LICENSE).
