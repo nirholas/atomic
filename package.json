@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Atomic pump.fun launch + fee collection + buy/transfer scripts using Jito bundles",
   "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nirholas/atomic.git"
+  },
+  "homepage": "https://github.com/nirholas/atomic#readme",
+  "bugs": {
+    "url": "https://github.com/nirholas/atomic/issues"
+  },
   "type": "commonjs",
   "scripts": {
     "metadata": "node src/metadata.js",
