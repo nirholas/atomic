@@ -19,7 +19,7 @@
 ```
 
 <p align="center">
-  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-14F195?style=flat-square"></a>
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-all%20rights%20reserved-14F195?style=flat-square"></a>
   <a href="#setup"><img alt="Node" src="https://img.shields.io/badge/node-%E2%89%A520-9945FF?style=flat-square&logo=node.js&logoColor=white"></a>
   <img alt="Solana" src="https://img.shields.io/badge/chain-Solana-00C2FF?style=flat-square&logo=solana&logoColor=white">
   <img alt="Jito" src="https://img.shields.io/badge/bundles-Jito-14F195?style=flat-square">
@@ -48,6 +48,8 @@
 - [Tests](#tests)
 - [Glossary](#glossary)
 - [Reference docs](#reference-docs)
+- [Visual index](#visual-index)
+- [Command cheat-sheet](#command-cheat-sheet)
 - [License](#license)
 
 ## At a glance
@@ -57,7 +59,7 @@
 | **Atomic launch** | funder pays rent + Jito tip in Tx1, creator signs `createV2` in Tx2 — both land or neither does |
 | **Atomic collect** | `collectCoinCreatorFee` + drain to safe wallet in one tx, so a leaked creator key can't be swept |
 | **MEV-aware** | every multi-step money flow runs inside a Jito bundle, so no searcher can interleave |
-| **Tiny surface** | plain CommonJS scripts under [`src/`](src/), TS helpers under [`src/lib/`](src/lib/), one CLI tool under [`tools/`](tools/) |
+| **Tiny surface** | plain CommonJS scripts under [`src/`](src/), TS helpers under [`src/lib/`](src/lib/), read-only CLI tools under [`tools/`](tools/) |
 | **Pure env-driven** | every script is configured with environment variables — copy [`.env.example`](.env.example) and go |
 
 <p align="center">
@@ -84,8 +86,13 @@ Atomic scripts for launching, collecting fees from, and trading pump.fun coins. 
 │       ├── funding-source.ts  detectSeededByPump implementation
 │       ├── programs.ts        Pump.fun program IDs + fee recipients
 │       └── funding-source.test.ts
-├── tools/
-│   └── check-pump-funding.ts  CLI wrapper around detectSeededByPump (run via tsx)
+├── tools/                     Read-only CLI tools (run via tsx)
+│   ├── check-pump-funding.ts  CLI wrapper around detectSeededByPump
+│   ├── sanity-check.ts        Pre-flight env / keypair / balance check
+│   ├── check-balances.ts      SOL + SPL / Token-2022 balances for a wallet
+│   ├── check-bundle-status.ts Query a Jito bundle by UUID
+│   ├── check-tip-accounts.ts  Diff live Jito tip accounts against the hardcoded list
+│   └── analyze-holders.ts     Holder distribution, concentration, Gini
 ├── .env.example               Copy to `.env` and fill in
 ├── package.json               npm scripts cover every runnable file
 └── tsconfig.json              Type-checks src/lib/ + tools/
@@ -125,6 +132,16 @@ cp .env.example .env
 | `src/distribute.js` | `npm run distribute` | Sqrt-weighted USDC rewards distribution to holders. Includes `EMERGENCY` mode for sweeping to a single address. |
 | `src/grind.js` | `npm run grind` | JS-based vanity address grinder (slow). `solana-keygen grind` is far faster. |
 | `tools/check-pump-funding.ts` | `npm run check-funding -- <wallet>` | Check whether a wallet was seeded by pump.fun (first inbound SOL from a fee recipient or migration authority). |
+| `tools/sanity-check.ts` | `npm run sanity` | Read-only pre-flight check. Validates env vars, decodes `FUNDER_SECRET` / `CREATOR_SECRET`, confirms `DESTINATION` parses, pings the RPC, and prints balances. Sends no transaction. |
+
+The remaining files in `tools/` are read-only diagnostics with no npm alias. Run them with `tsx` directly:
+
+```bash
+npx tsx tools/check-balances.ts <wallet> [rpcUrl]        # SOL + SPL / Token-2022 balances
+npx tsx tools/check-bundle-status.ts <bundleUuid>        # why a Jito bundle did or did not land
+npx tsx tools/check-tip-accounts.ts                      # drift between live and hardcoded tip accounts
+npx tsx tools/analyze-holders.ts <mint> [rpcUrl]         # holder count, top-N concentration, Gini
+```
 
 ## Typical launch flow
 
