@@ -18,7 +18,7 @@ Three properties the regular tx path does *not* give you:
 | **No interleaving** | No other transaction can be sandwiched between your txs. Searchers cannot front-run, back-run, or insert between bundle txs. |
 | **Auctioned inclusion** | Bundles compete on tip size. A bundle with a higher tip per CU consumed gets prioritized into the block over one with a lower tip. |
 
-A bundle is **not** a single fat tx — each tx still has its own 1232-byte limit, signature set, blockhash, and compute budget. The bundle is just a wrapper that says "treat these N as one unit."
+A bundle is **not** a single fat tx — each tx still has its own size limit (4096 bytes on transaction v1, 1232 on version 0), signature set, blockhash, and compute budget. The bundle is just a wrapper that says "treat these N as one unit."
 
 ---
 
@@ -33,8 +33,8 @@ The repo uses Jito's JSON-RPC `sendBundle` endpoint, exposed through `@jito-foun
   "method": "sendBundle",
   "params": [
     [
-      "<base58-encoded signed tx 1>",
-      "<base58-encoded signed tx 2>"
+      "<base64-encoded signed tx 1>",
+      "<base64-encoded signed tx 2>"
     ]
   ]
 }
@@ -240,7 +240,7 @@ What every Jito-using script in this repo does the same way:
 
 1. **Single blockhash for the whole bundle.** Fetched once at start.
 2. **Tip account chosen randomly per bundle** from the canonical list in [`src/lib/programs.ts`](../src/lib/programs.ts).
-3. **`SetComputeUnitPrice` and `SetComputeUnitLimit` on every tx.** Price = `PRIORITY` env var (default 100,000 micro-lamports). Limit set per tx based on what's inside.
+3. **Resource limits on every tx.** Under v1 these are message config, not instructions: a compute limit sized to the tx, a loaded-accounts-data budget measured from chain, and a total priority fee in lamports (`PRIORITY_FEE_LAMPORTS`, or `PRIORITY` converted at the tx's CU limit). Under `TRANSACTION_VERSION=0` the same values are emitted as `SetComputeUnitLimit` and `SetComputeUnitPrice` instructions.
 4. **Funder always pays the tip.** Creator is never the tip-payer, even when the creator signs other instructions in the same bundle.
 5. **Bundle is built → simulated → submitted → polled for confirmation.** Failures at any stage abort and surface the error; no auto-retry of the same bundle.
 6. **Region defaults to `mainnet.block-engine.jito.wtf`** (auto-routing). Override with `JITO_BLOCK_ENGINE_URL` if you have latency requirements.

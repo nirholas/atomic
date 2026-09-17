@@ -28,7 +28,11 @@ If you don't care about the "from" address on the create tx, prefer [`fire-atomi
 | `MINT_SECRET` | no | random | Base58 secret of the mint keypair. Set this if you ground a vanity mint with [`grind`](grind.md) or `solana-keygen grind`. |
 | `RENT_SOL` | no | `0.035` | SOL the funder transfers to the creator in Tx 1 to cover Tx 2 fees + any rent the create ix needs. |
 | `JITO_TIP` | no | `0.005` | SOL paid to a Jito tip account in Tx 1. Bump in busy windows. |
-| `PRIORITY` | no | `2000000` | Compute-unit price (micro-lamports) on both txs. |
+| `PRIORITY` | no | `2000000` | Per-CU price in micro-lamports, converted to a total lamport fee at each tx's CU limit. |
+| `PRIORITY_FEE_LAMPORTS` | no | — | Total priority fee in lamports. Overrides `PRIORITY`. This is what v1 charges natively. |
+| `CU_LIMIT` | no | `300000` | Compute-unit limit for the create tx. `createV2` is expensive; do not lower it. |
+| `LOADED_ACCOUNTS_DATA_LIMIT` | no | measured | Byte budget for loaded account data. Measured from chain with headroom when unset. |
+| `TRANSACTION_VERSION` | no | `1` | `1` for transaction v1 (4096-byte limit, inline resource config) or `0` to fall back. |
 | `RPC_URL` | no | mainnet-beta | Used only for blockhash + status polling — bundle goes to Jito's endpoint. |
 
 ## What it does
@@ -37,9 +41,9 @@ If you don't care about the "from" address on the create tx, prefer [`fire-atomi
 2. Checks funder balance ≥ `RENT_SOL + JITO_TIP + 0.002` SOL. Exits if not.
 3. Picks a Jito tip account at random from the hardcoded list.
 4. Fetches a fresh blockhash. Both txs share this blockhash (required for bundle atomicity).
-5. **Builds Tx 1** (funder signs, funder pays): set CU price/limit, transfer `RENT_SOL` to creator, transfer `JITO_TIP` to the tip account.
-6. **Builds Tx 2** (creator + mint sign, creator pays): set CU price/limit, run `PUMP_SDK.createV2Instruction({ mint, name, symbol, uri, creator, user: creator, mayhemMode: false, cashback: false })`.
-7. Base58-encodes both serialized txs and POSTs `{ method: "sendBundle", params: [[tx1, tx2]] }` to `https://mainnet.block-engine.jito.wtf/api/v1/bundles`.
+5. **Builds Tx 1** (funder signs, funder pays): transfer `RENT_SOL` to creator, transfer `JITO_TIP` to the tip account. Under v1 the compute limit, loaded-accounts budget, and total priority fee are message config rather than instructions.
+6. **Builds Tx 2** (creator + mint sign, creator pays): `PUMP_SDK.createV2Instruction({ mint, name, symbol, uri, creator, user: creator, mayhemMode: false, cashback: false })` with the same config treatment.
+7. Base64-encodes both serialized txs and POSTs `{ method: "sendBundle", params: [[tx1, tx2], { encoding: "base64" }] }` to `https://mainnet.block-engine.jito.wtf/api/v1/bundles`. Base58 bundle encoding is deprecated by the Block Engine and cannot carry a 4096-byte v1 transaction.
 8. Polls `getSignatureStatuses([sig1, sig2])` every 2 s for up to 60 s.
 9. On confirmation, prints the mint address, pump.fun URL, and Solscan URL for the create tx. Exits 0.
 10. On timeout, prints the Jito explorer URL for the bundle and exits 1.
@@ -61,9 +65,9 @@ Output (truncated):
 Funder (pays Tx1 + tip): 7d9V…3rUf
 Creator (pays Tx2):      9aPq…Yz1k
 Mint:                    HxYr…vLkN
-Jito tip: 0.005 SOL  |  Rent funding: 0.035 SOL
+Jito tip: 0.005 SOL  |  Rent funding: 0.035 SOL  |  Tx version: 1
 Funder balance: 0.3 SOL
-Tx1 size: 235 | Tx2 size: 678
+Tx1: 243/4096 bytes | Tx2: 691/4096 bytes
 Submitting bundle to Jito Block Engine...
 Bundle ID: c1a2…
 Tx1 sig: 4Sv…

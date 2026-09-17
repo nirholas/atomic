@@ -6,9 +6,24 @@ If you have ever read "tx too large" and wondered which account to drop, this pa
 
 ---
 
-## The 1232-byte hard limit
+## Transaction v1 raises the ceiling to 4096 bytes
 
-Solana enforces a **1232-byte maximum** on the serialized form of any transaction. The limit comes from the underlying packet MTU (1280 bytes IPv6 minus protocol overhead); it is not a configuration value, it is a wire-format constraint of the cluster.
+Transaction v1 (SIMD-0385) is live on mainnet, and every script in this repo
+builds v1 by default. A v1 transaction serializes up to **4096 bytes** instead of
+1232, which is why the create tx can now carry work that used to need a bundle.
+Two rules come with it: resource limits move out of ComputeBudget instructions
+and into the message config, and an unset limit budgets **zero**, so both the
+compute limit and the loaded-accounts-data limit must be set explicitly or the
+transaction fails. `src/lib/transaction.js` enforces both. There are no address
+lookup tables in v1.
+
+`TRANSACTION_VERSION=0` falls back to a version 0 transaction, which is still
+bound by everything below. Keep reading for the v0 budget; the arithmetic is the
+same under v1 with a larger ceiling.
+
+## The 1232-byte hard limit (version 0)
+
+Solana enforces a **1232-byte maximum** on the serialized form of any legacy or version 0 transaction. The limit comes from the underlying packet MTU (1280 bytes IPv6 minus protocol overhead); it is not a configuration value, it is a wire-format constraint of the cluster.
 
 A tx that exceeds 1232 bytes does not split, does not fragment, and cannot be sent. The RPC will reject it before broadcast with `Transaction too large`. You cannot raise this limit, ever.
 

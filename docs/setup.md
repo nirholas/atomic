@@ -94,7 +94,10 @@ Most scripts read `*_SECRET` directly via `bs58.decode`. The TS helpers and `dis
 | `NAME`, `SYMBOL`, `URI` | metadata / launch | `URI` is the output of [`metadata.js`](scripts/metadata.md). |
 | `DEV_BUY_SOL` | launch | Currently unused by the bundled scripts (no dev buy implementation); reserved for future. |
 | `JITO_TIP` | every Jito-bundle script | SOL. 0.005 is a sane starting bid. |
-| `PRIORITY` | every script | Compute-unit price in micro-lamports. 2,000,000 = 0.002 lamports/CU. |
+| `PRIORITY` | every script | Per-CU price in micro-lamports. 2,000,000 = 0.002 lamports/CU, converted to a total lamport fee at the tx's CU limit. |
+| `PRIORITY_FEE_LAMPORTS` | every script | Total priority fee in lamports. Overrides `PRIORITY`. Transaction v1 charges a total, not a per-CU price. |
+| `LOADED_ACCOUNTS_DATA_LIMIT` | every script | Byte budget for loaded account data. Measured from chain with headroom when unset. An unset v1 limit budgets zero and the tx fails, so it is always set explicitly. |
+| `TRANSACTION_VERSION` | every script | `1` (default) builds transaction v1 with its 4096-byte limit; `0` falls back to version 0. |
 | `DESTINATION` | collect / consolidate / watch-collect | Where SOL ends up. |
 | `CREATOR_PUBKEY` | watch-collect | Base58 *pubkey* (not secret) of the wallet whose vault to poll. |
 | `MIN_COLLECT_SOL` | watch-collect | SOL threshold before firing a collect (default 0.05). |

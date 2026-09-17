@@ -198,7 +198,10 @@ All variables can be supplied via shell env or a `.env` file at the repo root. S
 | `IMAGE_PATH` | `metadata.js` | Local image to upload to pump.fun IPFS. |
 | `DEV_BUY_SOL` | launch | Optional dev-buy size atomically bundled with the create. `0` to skip. |
 | `JITO_TIP` | Jito-bundle scripts | Tip in SOL paid to the Jito block engine. 0.005 is a sane start; raise to 0.01–0.02 in busy markets. |
-| `PRIORITY` | most | Compute-unit price in micro-lamports. |
+| `PRIORITY` | most | Per-CU price in micro-lamports, converted to a total lamport fee at the tx's CU limit. |
+| `PRIORITY_FEE_LAMPORTS` | most | Total priority fee in lamports. Overrides `PRIORITY`. This is the unit transaction v1 charges natively. |
+| `LOADED_ACCOUNTS_DATA_LIMIT` | most | Byte budget for loaded account data. Measured from chain with headroom when unset. |
+| `TRANSACTION_VERSION` | most | `1` (default) for transaction v1, or `0` to fall back to version 0. |
 | `TARGET_MINT` | `buy-jito.js` | Mint address of the token to buy. |
 | `BUY_SOL` | `buy-jito.js` | SOL amount to spend per buy. |
 | `SLIPPAGE_BPS` | `buy-jito.js` | Slippage tolerance in basis points (500 = 5%). |
@@ -215,7 +218,7 @@ All variables can be supplied via shell env or a `.env` file at the repo root. S
 
 ## Architecture: why Jito bundles
 
-A pump.fun create instruction has many accounts and is near the 1232-byte tx size limit. To make the create tx come **from** the creator wallet (so on-chain attribution matches), you'd need to also fund the creator with rent SOL atomically — but that pushes the tx over size.
+A pump.fun create instruction has many accounts. Under version 0 it sits near the 1232-byte tx size limit; transaction v1 raises that to 4096 bytes, so the squeeze described below is a version 0 constraint. To make the create tx come **from** the creator wallet (so on-chain attribution matches), you'd need to also fund the creator with rent SOL atomically — but that pushes the tx over size.
 
 Jito bundles solve this: two separate txs that share a blockhash and execute atomically (all-or-nothing) on the block engine. No bot can insert between them. This is the basis of `fire-jito.js`, `collect-jito.js`, `consolidate.js`, `buy-jito.js`, and `rescue-tokens.js`.
 
