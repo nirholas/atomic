@@ -30,7 +30,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nirholas/pump-sdk": "^1.30.0",
+    "@nirholas/pump-sdk": "^2.0.0",
     "@solana/kit": "^8.3.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.99.0",

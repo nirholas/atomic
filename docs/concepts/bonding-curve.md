@@ -67,17 +67,23 @@ The curve's math is identical — only the units of the SOL-axis reserves change
 ## Reading the curve from a script
 
 ```ts
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { Connection } from '@solana/web3.js';
+import { OnlinePumpSdk } from '@nirholas/pump-sdk';
 
-const bc = await PUMP_SDK.fetchBondingCurve(mint);
+const sdk = new OnlinePumpSdk(new Connection(process.env.RPC_URL, 'confirmed'));
+const bc = await sdk.fetchBondingCurve(mint);
 console.log({
   complete: bc.complete,
-  virtualSolReserves: bc.virtualSolReserves.toString(),
+  quoteMint: bc.quoteMint.toBase58(),
+  virtualQuoteReserves: bc.virtualQuoteReserves.toString(),
   virtualTokenReserves: bc.virtualTokenReserves.toString(),
-  realSolReserves: bc.realSolReserves.toString(),
+  realQuoteReserves: bc.realQuoteReserves.toString(),
   realTokenReserves: bc.realTokenReserves.toString(),
+  isHolderReward: bc.isHolderReward,
 });
 ```
+
+`@nirholas/pump-sdk` 2 names the quote-side reserves `virtualQuoteReserves` and `realQuoteReserves` (formerly `virtualSolReserves` and `realSolReserves`). The byte layout is unchanged, but the old names now read `undefined`, and the balance is denominated in `quoteMint`, which is wrapped SOL only for a SOL-paired coin.
 
 The "virtual" reserves are the curve's internal accounting; the "real" reserves are the actual on-chain SOL/tokens. The curve uses virtual for pricing to make the function smooth without requiring a huge initial deposit.
 

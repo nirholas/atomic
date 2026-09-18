@@ -13,13 +13,18 @@
  * Required .env:
  *   RPC_URL, FUNDER_SECRET, CREATOR_SECRET, NAME, SYMBOL, URI, DEV_BUY_SOL, JITO_TIP
  *
+ * Optional .env:
+ *   HOLDER_REWARD=true  launch a holder-reward coin. The SDK routes the dev-buy's
+ *                       creator vault to holderRewardsPda(mint) automatically.
+ *
  * Run: node examples/02-launch-with-dev-buy.js
  */
 
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@nirholas/pump-sdk';
+import { describeFeeRecipient, resolveLaunchOptions } from '../src/lib/launch-options.js';
 import BN from 'bn.js';
 
 // Production code uses src/lib/jito.ts. Inlined here for clarity.
@@ -46,9 +51,11 @@ const conn = new Connection(process.env.RPC_URL, 'confirmed');
 const funder = Keypair.fromSecretKey(bs58.decode(process.env.FUNDER_SECRET));
 const creator = Keypair.fromSecretKey(bs58.decode(process.env.CREATOR_SECRET));
 const mint = Keypair.generate();
+const launch = resolveLaunchOptions();
 
 console.log('Launching:', process.env.NAME, 'with dev-buy', process.env.DEV_BUY_SOL, 'SOL');
 console.log('Mint:', mint.publicKey.toBase58());
+console.log('Creator fees accrue to:', describeFeeRecipient(launch, mint.publicKey, creator.publicKey));
 
 const tipLamports = Math.floor(parseFloat(process.env.JITO_TIP) * LAMPORTS_PER_SOL);
 const devBuyLamports = Math.floor(parseFloat(process.env.DEV_BUY_SOL || '0') * LAMPORTS_PER_SOL);
@@ -62,11 +69,13 @@ const tx1 = new Transaction({ feePayer: funder.publicKey, recentBlockhash: block
 );
 tx1.sign(funder);
 
-// Tx2: creator runs create + dev-buy
-const createIxs = await PUMP_SDK.createV2AndBuyInstructions({
+// Tx2: creator runs create + dev-buy. The online SDK fetches Global, sizes the
+// buy from the initial curve, and throws HolderRewardDisabledError if
+// HOLDER_REWARD=true while pump.fun has holder rewards switched off.
+const createIxs = await new OnlinePumpSdk(conn).createV2AndBuyInstructions({
   mint: mint.publicKey, name: process.env.NAME, symbol: process.env.SYMBOL, uri: process.env.URI,
   creator: creator.publicKey, user: creator.publicKey, solAmount: new BN(devBuyLamports),
-  amount: new BN(1), mayhemMode: false, cashback: true,
+  mayhemMode: false, holderReward: launch.holderReward,
 });
 const tx2 = new Transaction({ feePayer: creator.publicKey, recentBlockhash: blockhash }).add(...createIxs);
 tx2.sign(creator, mint);

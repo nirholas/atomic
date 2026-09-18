@@ -13,9 +13,16 @@ an increasing price; selling burns at a decreasing price. Implemented
 on-chain by the pump program — `@nirholas/pump-sdk` exposes the math
 via `newBondingCurve` and `getBuyTokenAmountFromSolAmount`.
 
-**Cashback.** Optional buyer-side flag on `createV2`/buy
-instructions. The toolkit's launchers set `cashback: false` —
-enabling it changes the fee math and is not exercised here.
+**Cashback.** Trader rebate flag on `createV2`. Retired for new
+coins by the Pump program 2.0 (`create_v2` error 6082), and
+`@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` for it.
+Existing cashback coins still trade and claim. The launchers reject
+`CASHBACK=true` and offer `HOLDER_REWARD=true` instead.
+
+**Holder rewards.** A `createV2` launch mode (`HOLDER_REWARD=true`)
+where the coin's creator is `holderRewardsPda(mint)`, so creator fees
+are paid out to token holders by pump.fun rather than collected by a
+creator wallet. See `docs/concepts/holder-rewards.md`.
 
 **Creator.** The on-chain "creator" account recorded on a pump.fun
 coin at create time. Determines who can call `collectCoinCreatorFee`.

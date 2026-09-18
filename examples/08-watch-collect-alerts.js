@@ -18,7 +18,7 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@nirholas/pump-sdk';
 
 const TIP_ACCOUNT = new PublicKey('T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt');
 
@@ -50,27 +50,27 @@ const minLamports = Math.floor(parseFloat(process.env.MIN_COLLECT_SOL) * LAMPORT
 const tipLamports = Math.floor(parseFloat(process.env.JITO_TIP) * LAMPORTS_PER_SOL);
 const pollMs = parseInt(process.env.POLL_INTERVAL_SECONDS || '30', 10) * 1000;
 
+const sdk = new OnlinePumpSdk(conn);
+if ((await sdk.fetchBondingCurve(mint)).isHolderReward) {
+  throw new Error('This is a holder-reward coin: its creator fees go to holders through pump.fun, so there is nothing to watch or collect.');
+}
+
 console.log(`Watch-collect started. Polling every ${pollMs / 1000}s. Threshold: ${process.env.MIN_COLLECT_SOL} SOL.`);
 await sendTelegram(`📡 <b>Watch-collect started</b> for <code>${mint.toBase58()}</code>`);
 
 while (true) {
   try {
-    const bc = await PUMP_SDK.fetchBondingCurve(mint);
-    const vaultPda = bc.complete
-      ? await PUMP_SDK.getCoinCreatorVaultAta(mint)
-      : await PUMP_SDK.getCreatorVaultPda(mint);
-
-    const vaultBalance = await conn.getBalance(vaultPda, 'confirmed');
+    // Creator vaults are per creator, not per mint: this sums the bonding-curve
+    // vault and the PumpSwap vault for every coin this creator launched.
+    const vaultBalance = Number(await sdk.getCreatorVaultBalanceBothPrograms(creator.publicKey));
 
     if (vaultBalance >= minLamports) {
       console.log(`Vault has ${vaultBalance / LAMPORTS_PER_SOL} SOL — collecting`);
-      const collectIx = bc.complete
-        ? await PUMP_SDK.collectCoinCreatorFeeInstruction({ mint, user: creator.publicKey })
-        : await PUMP_SDK.collectCreatorFeeInstruction({ mint, user: creator.publicKey });
+      const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
 
       const { blockhash } = await conn.getLatestBlockhash('confirmed');
       const tx = new Transaction({ feePayer: funder.publicKey, recentBlockhash: blockhash }).add(
-        collectIx,
+        ...collectIxs,
         SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: destination, lamports: vaultBalance }),
         SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: TIP_ACCOUNT, lamports: tipLamports }),
       );

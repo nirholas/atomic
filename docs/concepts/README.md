@@ -11,6 +11,7 @@ These are conceptual references, not tutorials. For step-by-step walkthroughs se
 - [**creator-fees.md**](./creator-fees.md) — what creators earn, where it accumulates, how it's claimed (V1 vs V2).
 - [**fee-sharing.md**](./fee-sharing.md) — splitting creator fees across multiple wallets via BPS shareholder configs.
 - [**cashback.md**](./cashback.md) — volume-based rebates paid back to traders. SOL-only.
+- [**holder-rewards.md**](./holder-rewards.md): the Pump program 2.0 launch mode that pays creator fees to holders, and the replacement for new cashback coins.
 - [**mayhem-mode.md**](./mayhem-mode.md) — the alternative bonding-curve mechanics enabled by the `createV2` instruction's `mayhemMode` flag.
 
 For the 2026-05-21 V2 USDC quote-mint upgrade, see [`../v2-usdc-rollout/`](../v2-usdc-rollout/) — that's a whole reference subset rather than a single concept file.

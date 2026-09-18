@@ -21,7 +21,7 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@nirholas/pump-sdk';
 
 async function submitBundle(_conn, txs) {
   const encoded = txs.map((tx) => tx.serialize().toString('base64'));
@@ -57,17 +57,19 @@ console.log('Pre-consolidate balances:');
 console.log('  funder:', funderBal / LAMPORTS_PER_SOL, 'SOL');
 console.log('  creator:', creatorBal / LAMPORTS_PER_SOL, 'SOL');
 
-const bc = await PUMP_SDK.fetchBondingCurve(mint);
-const collectIx = bc.complete
-  ? await PUMP_SDK.collectCoinCreatorFeeInstruction({ mint, user: creator.publicKey })
-  : await PUMP_SDK.collectCreatorFeeInstruction({ mint, user: creator.publicKey });
+const sdk = new OnlinePumpSdk(conn);
+const bc = await sdk.fetchBondingCurve(mint);
+if (bc.isHolderReward) {
+  throw new Error('This is a holder-reward coin: its creator fees go to holders through pump.fun, so there is nothing for the creator to collect.');
+}
+const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
 
 const creatorDrain = Math.max(0, creatorBal - RESERVE);
 const funderDrain = Math.max(0, funderBal - RESERVE - tipLamports - 5000); // 5000 for network fee
 
 const { blockhash } = await conn.getLatestBlockhash('confirmed');
 const tx = new Transaction({ feePayer: funder.publicKey, recentBlockhash: blockhash }).add(
-  collectIx,
+  ...collectIxs,
   SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: destination, lamports: creatorDrain }),
   SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: destination, lamports: funderDrain }),
   SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: TIP_ACCOUNT, lamports: tipLamports }),

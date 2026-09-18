@@ -46,7 +46,7 @@ Plus four standalone tools:
 - [`docs/scripts/`](./docs/scripts/) — per-script reference.
 - [`docs/runbooks/`](./docs/runbooks/) — incident response playbooks.
 - [`docs/v2-usdc-rollout/`](./docs/v2-usdc-rollout/) — 2026-05-21 V2 USDC upgrade engineering reference.
-- [`docs/concepts/`](./docs/concepts/) — bonding-curve, graduation, creator-fees, fee-sharing, cashback, mayhem-mode.
+- [`docs/concepts/`](./docs/concepts/): bonding-curve, graduation, creator-fees, fee-sharing, cashback, holder-rewards, mayhem-mode.
 - [`docs/security/`](./docs/security/) — threat model, key management, incident response.
 - [`docs/operations/`](./docs/operations/) — RPC providers, Jito tips, cost estimates, monitoring.
 - [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/) — standalone executor prompts for V2 USDC rollout work.

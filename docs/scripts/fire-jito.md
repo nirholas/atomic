@@ -28,6 +28,8 @@ If you don't care about the "from" address on the create tx, prefer [`fire-atomi
 | `MINT_SECRET` | no | random | Base58 secret of the mint keypair. Set this if you ground a vanity mint with [`grind`](grind.md) or `solana-keygen grind`. |
 | `RENT_SOL` | no | `0.035` | SOL the funder transfers to the creator in Tx 1 to cover Tx 2 fees + any rent the create ix needs. |
 | `JITO_TIP` | no | `0.005` | SOL paid to a Jito tip account in Tx 1. Bump in busy windows. |
+| `HOLDER_REWARD` | no | `false` | `true` launches a [holder-reward coin](../concepts/holder-rewards.md): creator fees accrue to `holderRewardsPda(mint)` and pump.fun pays them out to holders. Refused before anything is signed while the Pump `Global` account has holder rewards disabled. |
+| `CASHBACK` | no | unset | Rejected when truthy. The Pump program 2.0 no longer creates cashback coins (`create_v2` error 6082); use `HOLDER_REWARD=true` instead. |
 | `PRIORITY` | no | `2000000` | Per-CU price in micro-lamports, converted to a total lamport fee at each tx's CU limit. |
 | `PRIORITY_FEE_LAMPORTS` | no | — | Total priority fee in lamports. Overrides `PRIORITY`. This is what v1 charges natively. |
 | `CU_LIMIT` | no | `300000` | Compute-unit limit for the create tx. `createV2` is expensive; do not lower it. |
@@ -42,7 +44,7 @@ If you don't care about the "from" address on the create tx, prefer [`fire-atomi
 3. Picks a Jito tip account at random from the hardcoded list.
 4. Fetches a fresh blockhash. Both txs share this blockhash (required for bundle atomicity).
 5. **Builds Tx 1** (funder signs, funder pays): transfer `RENT_SOL` to creator, transfer `JITO_TIP` to the tip account. Under v1 the compute limit, loaded-accounts budget, and total priority fee are message config rather than instructions.
-6. **Builds Tx 2** (creator + mint sign, creator pays): `PUMP_SDK.createV2Instruction({ mint, name, symbol, uri, creator, user: creator, mayhemMode: false, cashback: false })` with the same config treatment.
+6. **Builds Tx 2** (creator + mint sign, creator pays): `PUMP_SDK.createV2Instruction({ mint, name, symbol, uri, creator, user: creator, mayhemMode: false, holderReward })` with the same config treatment. With `HOLDER_REWARD=true` the script first reads the Pump `Global` account and stops if holder rewards are disabled.
 7. Base64-encodes both serialized txs and POSTs `{ method: "sendBundle", params: [[tx1, tx2], { encoding: "base64" }] }` to `https://mainnet.block-engine.jito.wtf/api/v1/bundles`. Base58 bundle encoding is deprecated by the Block Engine and cannot carry a 4096-byte v1 transaction.
 8. Polls `getSignatureStatuses([sig1, sig2])` every 2 s for up to 60 s.
 9. On confirmation, prints the mint address, pump.fun URL, and Solscan URL for the create tx. Exits 0.
@@ -95,11 +97,13 @@ After the bundle lands:
 | `Funder needs >= X SOL` | Funder under-funded. | Top up to ≥ `RENT_SOL + JITO_TIP + 0.002`. |
 | `Bundle submit failed: …` (with `error` field) | Jito rejected the bundle synchronously — usually a tip-account problem. | See [Setup → Jito tip-account refresh](../setup.md#tip-account-refresh). |
 | `Bundle not confirmed in 60s` | Bundle accepted but didn't land. | Tip too low (most common) or blockhash expired. Re-run with a higher `JITO_TIP`. Inspect at `explorer.jito.wtf/bundle/<id>`. |
+| `CASHBACK=true is no longer supported` | Old config asking for a cashback coin. | Remove `CASHBACK`, or set `HOLDER_REWARD=true`. |
+| `holder-reward coin creation is disabled` | `HOLDER_REWARD=true` while the Pump `Global` account has `isHolderRewardEnabled = false`. | Launch without `HOLDER_REWARD`, or retry once pump.fun enables it. |
 | Tx 2 errors `Custom program error: 0x…` | pump-sdk version drift; the live program added a required account the SDK doesn't pass. | Upgrade `@nirholas/pump-sdk` in `package.json`. As a workaround: use [`fire-atomic-create`](fire-atomic-create.md), which has the same risk but without the Jito tip cost while you debug. |
 
 ## Notes
 
 - The mint keypair is single-use. Once a mint is created, that keypair is no longer needed for anything (pump.fun handles ownership via PDAs). The script doesn't write `MINT_SECRET` anywhere on disk; if you supplied one, *you* are responsible for keeping it.
 - The script generates a fresh mint if `MINT_SECRET` is unset. This is fine for almost every use case. Use vanity mints sparingly — they're a "look cool" feature that costs you compute.
-- `mayhemMode: false, cashback: false` are pump.fun feature flags hardcoded off. If pump.fun adds new launch modes, update [`src/fire-jito.js`](../../src/fire-jito.js).
+- `mayhemMode` is hardcoded off. `holderReward` comes from `HOLDER_REWARD` through [`src/lib/launch-options.js`](../../src/lib/launch-options.js), which both launchers share. Cashback is gone: `@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` for it and the program rejects it with 6082.
 - Compute budget: 1,000 CU on Tx 1 (just transfers) and 300,000 CU on Tx 2 (`createV2` is heavy). Increase Tx 2's limit if the program upgrade ever pushes it over.

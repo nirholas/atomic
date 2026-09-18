@@ -54,6 +54,8 @@ FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
 - `JITO_TIP` — SOL. Default 0.005. Bump to 0.01–0.02 if bundles return `Invalid`.
 - `DEV_BUY_SOL` — optional same-bundle dev buy. 0 to skip.
 - `PRIORITY` — compute-unit price (microlamports).
+- `HOLDER_REWARD`: `true` launches a holder-reward coin; creator fees go to `holderRewardsPda(mint)` and pump.fun pays them to holders. Refused while the Pump `Global` account has it disabled.
+- `CASHBACK`: rejected. The Pump program 2.0 no longer creates cashback coins (error 6082).
 
 ## Gotchas
 

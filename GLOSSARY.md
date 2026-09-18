@@ -26,7 +26,7 @@ Terminology used across the `atomic` repo. Cross-references to deeper explanatio
 
 ## C
 
-**Cashback** — Volume-based rebate paid back to traders via the `claim_cashback` instruction. SOL-only; no V2 USDC variant at the May-21 rollout. See [`docs/concepts/cashback.md`](./docs/concepts/cashback.md).
+**Cashback**: volume-based rebate paid back to traders via the `claim_cashback` instruction. SOL-only; no V2 USDC variant at the May-21 rollout. New cashback coins were retired by the Pump program 2.0 (`create_v2` error 6082); existing ones still trade and claim. See [`docs/concepts/cashback.md`](./docs/concepts/cashback.md).
 
 **Compute budget** — Solana's per-tx CU (compute-unit) limit. Default 200K, raisable to ~1.4M via `setComputeUnitLimit`. Paired with a price-per-CU set via `setComputeUnitPrice` (the priority fee).
 
@@ -57,6 +57,10 @@ Terminology used across the `atomic` repo. Cross-references to deeper explanatio
 **Graduation** — When a coin's bonding curve completes (~$69K market cap at SOL prices), it migrates to a real AMM pool on the **PumpSwap AMM program**. Triggered by the `CompleteEvent` / `CompleteAmmMigrationEvent` events. See [`docs/concepts/graduation.md`](./docs/concepts/graduation.md).
 
 **Grind (vanity grind)** — CPU-bound search for a keypair whose pubkey starts with a desired prefix. `solana-keygen grind` (Rust) is the fast tool; `npm run grind` is a slow JS fallback.
+
+## H
+
+**Holder rewards**: a launch mode on `create_v2` that makes `holderRewardsPda(mint)` the coin's creator, so creator fees go to token holders through pump.fun's `distribute_fee_to_holders` instead of to a creator wallet. Enabled with `HOLDER_REWARD=true` on the launchers. See [`docs/concepts/holder-rewards.md`](./docs/concepts/holder-rewards.md).
 
 ## I
 

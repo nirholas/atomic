@@ -32,6 +32,12 @@ disc(8) + user(32) + amount(u64) + timestamp(u64)
 
 The lack of a V2 variant means cashback is **SOL-only** for now. There's no `quote_mint` field; amounts are always in lamports.
 
+## New cashback coins are retired (Pump program 2.0)
+
+The Pump program 2.0 no longer creates cashback coins: `create_v2` with the cashback flag fails with error 6082, and `@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` before building the instruction. Coins that were created with cashback keep trading, accruing, and claiming exactly as described on this page.
+
+The toolkit's launchers reject `CASHBACK=true` with a pointer to the replacement, [holder rewards](./holder-rewards.md).
+
 ## What changes with V2 USDC
 
 Cashback **does not change** with the May-21 V2 rollout. The on-chain semantics:

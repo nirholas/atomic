@@ -117,7 +117,7 @@ The atomic toolkit's `buy-jito.js` routes via Jupiter, which abstracts the V1/V2
 
 Confusingly, these are unrelated:
 
-- **`createV2`**: the pump.fun create instruction added before the May-21 rollout. Adds `creator` pubkey, mayhem mode, and cashback toggle to the original `create`. Has been the standard since early 2026.
+- **`createV2`**: the pump.fun create instruction added before the May-21 rollout. Adds `creator` pubkey, mayhem mode, and launch-mode flags to the original `create`. Has been the standard since early 2026. Since the Pump program 2.0 its cashback flag is rejected for new coins and a holder-reward flag takes its place (see [holder rewards](./docs/concepts/holder-rewards.md)).
 - **V2 USDC rollout (May 21)**: a separate batch of `*_v2` instructions for buy/sell/claim that introduces the `quote_mint` argument. Independent of the `createV2` instruction.
 
 So `createV2` was on-chain before the May-21 V2 rollout — same `_v2` suffix, different upgrade.

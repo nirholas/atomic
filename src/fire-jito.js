@@ -25,15 +25,21 @@
 //   LOADED_ACCOUNTS_DATA_LIMIT — optional byte budget for loaded accounts
 //                            (default: measured from chain plus headroom)
 //   TRANSACTION_VERSION    — 1 (default) or 0
+//   HOLDER_REWARD          - true to launch a holder-reward coin: creator fees go to
+//                            holderRewardsPda(mint) and pump.fun pays them out to
+//                            holders (default false). Refused while the Pump Global
+//                            account has holder rewards disabled.
+//   CASHBACK               - rejected: the Pump program 2.0 no longer creates cashback coins
 
 const bs58mod = require('bs58');
 const bs58decode = bs58mod.default ? bs58mod.default.decode : bs58mod.decode;
 const { Connection, Keypair, SystemProgram } = require('@solana/web3.js');
-const { PUMP_SDK } = require('@nirholas/pump-sdk');
+const { PUMP_SDK, OnlinePumpSdk } = require('@nirholas/pump-sdk');
 const {
   buildSignedTransaction, estimateLoadedAccountsDataSizeLimit, parseComputeUnitLimit,
   resolvePriorityFeeLamports, resolveTransactionVersion,
 } = require('./lib/transaction');
+const { resolveLaunchOptions, assertLaunchOptionsAllowed, describeFeeRecipient } = require('./lib/launch-options');
 const { randomTipAccount, sendBundle, waitForSignatures } = require('./lib/jito');
 
 const RPC_URL = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
@@ -47,6 +53,7 @@ const JITO_TIP  = parseFloat(process.env.JITO_TIP || '0.005');
 const CU_LIMIT  = parseComputeUnitLimit(process.env.CU_LIMIT, 300000);
 // Tx1 is two system transfers; it needs a fraction of the create tx's budget.
 const TRANSFER_CU_LIMIT = 1000;
+const LAUNCH    = resolveLaunchOptions();
 const VERSION   = resolveTransactionVersion();
 
 const funder  = Keypair.fromSecretKey(bs58decode(process.env.FUNDER_SECRET));
@@ -73,6 +80,11 @@ const mint    = process.env.MINT_SECRET
     console.error(`Funder needs >= ${needed} SOL.`);
     process.exit(1);
   }
+
+  if (LAUNCH.holderReward) {
+    assertLaunchOptionsAllowed(LAUNCH, await new OnlinePumpSdk(c).fetchGlobal());
+  }
+  console.log('Creator fees accrue to:', describeFeeRecipient(LAUNCH, mint.publicKey, creator.publicKey));
 
   const tipAccount = randomTipAccount();
   const { blockhash, lastValidBlockHeight } = await c.getLatestBlockhash('confirmed');
@@ -102,7 +114,7 @@ const mint    = process.env.MINT_SECRET
     creator: creator.publicKey,
     user:    creator.publicKey,
     mayhemMode: false,
-    cashback:   false,
+    holderReward: LAUNCH.holderReward,
   });
   const tx2 = buildSignedTransaction({
     version: VERSION,

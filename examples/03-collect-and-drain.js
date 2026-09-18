@@ -17,7 +17,7 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@nirholas/pump-sdk';
 
 async function submitBundle(_conn, txs, jitoUrl = 'https://mainnet.block-engine.jito.wtf') {
   const encoded = txs.map((tx) => tx.serialize().toString('base64'));
@@ -48,10 +48,14 @@ console.log('Collecting creator fees from:', mint.toBase58());
 // Pre-balance — used to compute the post-collect balance to forward.
 const preBalance = await conn.getBalance(creator.publicKey, 'confirmed');
 
-const bc = await PUMP_SDK.fetchBondingCurve(mint);
-const collectIx = bc.complete
-  ? await PUMP_SDK.collectCoinCreatorFeeInstruction({ mint, user: creator.publicKey })
-  : await PUMP_SDK.collectCreatorFeeInstruction({ mint, user: creator.publicKey });
+const sdk = new OnlinePumpSdk(conn);
+const bc = await sdk.fetchBondingCurve(mint);
+if (bc.isHolderReward) {
+  throw new Error('This is a holder-reward coin: its creator fees go to holders through pump.fun, so there is nothing for the creator to collect.');
+}
+// Collects the bonding-curve vault and the PumpSwap vault in one go, so it
+// works before and after graduation.
+const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
 
 const tipLamports = Math.floor(parseFloat(process.env.JITO_TIP) * LAMPORTS_PER_SOL);
 const tipAccount = TIP_ACCOUNTS[0];
@@ -62,7 +66,7 @@ const forwardLamports = Math.max(0, preBalance - RESERVE + 100_000_000); // opti
 
 const { blockhash } = await conn.getLatestBlockhash('confirmed');
 const tx = new Transaction({ feePayer: funder.publicKey, recentBlockhash: blockhash }).add(
-  collectIx,
+  ...collectIxs,
   SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: destination, lamports: forwardLamports }),
   SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: tipAccount, lamports: tipLamports }),
 );

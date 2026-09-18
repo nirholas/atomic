@@ -67,6 +67,7 @@ See [`../v2-usdc-rollout/02-event-layouts.md`](../v2-usdc-rollout/02-event-layou
 - **Always atomic-bundle the claim with a drain.** A non-atomic claim leaves SOL on the creator wallet, which sweepers can grab if the creator key is shared/leaked. `collect-jito.js` enforces this.
 - **Run claims when the vault is meaningfully full.** Each claim costs ~0.001 SOL in Jito tip + network fees. Claiming a vault holding 0.005 SOL is mostly losses to fees. The `watch-collect.js` daemon enforces a `MIN_COLLECT_SOL` threshold for this reason.
 - **Multiple claimers per coin.** If [fee-sharing](./fee-sharing.md) is configured, the V2 `distribute_creator_fees_v2` ix routes the fee to the shareholders rather than the single creator. Use `consolidate.js` for full-drain operations.
+- **Holder-reward coins have no creator to collect for.** A coin launched with `HOLDER_REWARD=true` records `holderRewardsPda(mint)` as its creator, so its fees are paid out to holders by pump.fun and `collect-jito.js` has nothing to claim for it. See [holder-rewards.md](./holder-rewards.md).
 - **Cashback ≠ creator fee.** Cashback is a separate flow paid back to *traders* (see [cashback.md](./cashback.md)). It's not collected via `collect_creator_fee`.
 
 ## Worked example

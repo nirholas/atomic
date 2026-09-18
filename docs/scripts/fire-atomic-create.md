@@ -26,6 +26,8 @@ For maximum on-chain attribution to the creator, use [`fire-jito`](fire-jito.md)
 | `FUNDER_SECRET` | **yes** | — | Base58 secret. Pays the tx fee and transfers `RENT_SOL` to the creator inside the same tx. |
 | `CREATOR_SECRET` | **yes** | — | Base58 secret. Signs `createV2` but does *not* pay fees. |
 | `MINT_SECRET` | no | random | Optional vanity mint. |
+| `HOLDER_REWARD` | no | `false` | `true` launches a [holder-reward coin](../concepts/holder-rewards.md): creator fees accrue to `holderRewardsPda(mint)` and pump.fun pays them out to holders. Refused before anything is signed while the Pump `Global` account has holder rewards disabled. |
+| `CASHBACK` | no | unset | Rejected when truthy. The Pump program 2.0 no longer creates cashback coins (`create_v2` error 6082); use `HOLDER_REWARD=true` instead. |
 | `RENT_SOL` | no | `0.035` | SOL the funder transfers to the creator wallet inside this tx, to pre-fund whatever rent the `createV2` ix needs from the creator. |
 | `PRIORITY` | no | `3000000` | Per-CU price in micro-lamports, converted to a total lamport fee at `CU_LIMIT`. |
 | `PRIORITY_FEE_LAMPORTS` | no | — | Total priority fee in lamports. Overrides `PRIORITY`. This is what v1 charges natively. |
@@ -38,7 +40,7 @@ For maximum on-chain attribution to the creator, use [`fire-jito`](fire-jito.md)
 
 1. Loads funder + creator + mint keypairs.
 2. Verifies funder balance ≥ `RENT_SOL + 0.005` SOL.
-3. Builds a single versioned tx with: compute-budget ixs, `SystemProgram.transfer(funder → creator, RENT_SOL)`, then `PUMP_SDK.createV2Instruction({…})`.
+3. Builds a single versioned tx with: compute-budget ixs, `SystemProgram.transfer(funder → creator, RENT_SOL)`, then `PUMP_SDK.createV2Instruction({…, holderReward })`. With `HOLDER_REWARD=true` the script first reads the Pump `Global` account and stops if holder rewards are disabled.
 4. Funder is the fee payer; tx is signed by funder + creator + mint.
 5. Logs serialized size against the limit for the chosen version (4096 bytes on v1, 1232 on v0) and rejects anything larger.
 6. Runs `simulateTransaction` first; on simulation failure, prints logs and exits.

@@ -23,15 +23,21 @@
 //   LOADED_ACCOUNTS_DATA_LIMIT — optional byte budget for loaded accounts
 //                            (default: measured from chain plus headroom)
 //   TRANSACTION_VERSION    — 1 (default) or 0
+//   HOLDER_REWARD          - true to launch a holder-reward coin: creator fees go to
+//                            holderRewardsPda(mint) and pump.fun pays them out to
+//                            holders (default false). Refused while the Pump Global
+//                            account has holder rewards disabled.
+//   CASHBACK               - rejected: the Pump program 2.0 no longer creates cashback coins
 
 const bs58mod = require('bs58');
 const bs58decode = bs58mod.default ? bs58mod.default.decode : bs58mod.decode;
 const { Connection, Keypair, SystemProgram } = require('@solana/web3.js');
-const { PUMP_SDK } = require('@nirholas/pump-sdk');
+const { PUMP_SDK, OnlinePumpSdk } = require('@nirholas/pump-sdk');
 const {
   buildSignedTransaction, estimateLoadedAccountsDataSizeLimit, parseComputeUnitLimit,
   resolvePriorityFeeLamports, resolveTransactionVersion, sendSignedTransaction, simulateSignedTransaction,
 } = require('./lib/transaction');
+const { resolveLaunchOptions, assertLaunchOptionsAllowed, describeFeeRecipient } = require('./lib/launch-options');
 
 const RPC_URL  = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 if (!process.env.URI) { console.error('Missing URI'); process.exit(1); }
@@ -41,6 +47,7 @@ const SYMBOL   = process.env.SYMBOL || 'MEME';
 const RENT_SOL = parseFloat(process.env.RENT_SOL || '0.035');
 const CU_LIMIT = parseComputeUnitLimit(process.env.CU_LIMIT, 300000);
 const PRIORITY_FEE_LAMPORTS = resolvePriorityFeeLamports({ computeUnitLimit: CU_LIMIT, defaultMicroLamports: 3000000 });
+const LAUNCH   = resolveLaunchOptions();
 const VERSION  = resolveTransactionVersion();
 
 const funder  = Keypair.fromSecretKey(bs58decode(process.env.FUNDER_SECRET));
@@ -65,6 +72,11 @@ const mint    = process.env.MINT_SECRET
     process.exit(1);
   }
 
+  if (LAUNCH.holderReward) {
+    assertLaunchOptionsAllowed(LAUNCH, await new OnlinePumpSdk(c).fetchGlobal());
+  }
+  console.log('Creator fees accrue to:', describeFeeRecipient(LAUNCH, mint.publicKey, creator.publicKey));
+
   const createIx = await PUMP_SDK.createV2Instruction({
     mint:    mint.publicKey,
     name:    NAME,
@@ -73,7 +85,7 @@ const mint    = process.env.MINT_SECRET
     creator: creator.publicKey,
     user:    creator.publicKey,
     mayhemMode: false,
-    cashback:   false,
+    holderReward: LAUNCH.holderReward,
   });
   const instructions = [
     SystemProgram.transfer({
