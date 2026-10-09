@@ -100,6 +100,7 @@ Most scripts read `*_SECRET` directly via `bs58.decode`. The TS helpers and `dis
 | `TRANSACTION_VERSION` | every script | `1` (default) builds transaction v1 with its 4096-byte limit; `0` falls back to version 0. |
 | `DESTINATION` | collect / consolidate / watch-collect | Where SOL ends up. |
 | `CREATOR_PUBKEY` | watch-collect | Base58 *pubkey* (not secret) of the wallet whose vault to poll. |
+| `MINTS` | collect / consolidate / watch-collect | Comma-separated mints the creator launched. Their waiting creator fees are swept into the vault before the collect (`MINT` works for one coin). |
 | `MIN_COLLECT_SOL` | watch-collect | SOL threshold before firing a collect (default 0.05). |
 | `TARGET_MINT`, `BUY_SOL`, `SLIPPAGE_BPS` | buy | The token to buy and how much. |
 | `MINT`, `REWARD_PERCENT`, `MIN_BPS` | distribute | The token whose holders receive USDC rewards. |

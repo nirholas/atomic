@@ -99,11 +99,11 @@ After the bundle lands:
 | `Bundle not confirmed in 60s` | Bundle accepted but didn't land. | Tip too low (most common) or blockhash expired. Re-run with a higher `JITO_TIP`. Inspect at `explorer.jito.wtf/bundle/<id>`. |
 | `CASHBACK=true is no longer supported` | Old config asking for a cashback coin. | Remove `CASHBACK`, or set `HOLDER_REWARD=true`. |
 | `holder-reward coin creation is disabled` | `HOLDER_REWARD=true` while the Pump `Global` account has `isHolderRewardEnabled = false`. | Launch without `HOLDER_REWARD`, or retry once pump.fun enables it. |
-| Tx 2 errors `Custom program error: 0x…` | pump-sdk version drift; the live program added a required account the SDK doesn't pass. | Upgrade `@nirholas/pump-sdk` in `package.json`. As a workaround: use [`fire-atomic-create`](fire-atomic-create.md), which has the same risk but without the Jito tip cost while you debug. |
+| Tx 2 errors `Custom program error: 0x…` | pump-sdk version drift; the live program added a required account the SDK doesn't pass. | Upgrade `@pump-fun/pump-sdk` in `package.json`. As a workaround: use [`fire-atomic-create`](fire-atomic-create.md), which has the same risk but without the Jito tip cost while you debug. |
 
 ## Notes
 
 - The mint keypair is single-use. Once a mint is created, that keypair is no longer needed for anything (pump.fun handles ownership via PDAs). The script doesn't write `MINT_SECRET` anywhere on disk; if you supplied one, *you* are responsible for keeping it.
 - The script generates a fresh mint if `MINT_SECRET` is unset. This is fine for almost every use case. Use vanity mints sparingly — they're a "look cool" feature that costs you compute.
-- `mayhemMode` is hardcoded off. `holderReward` comes from `HOLDER_REWARD` through [`src/lib/launch-options.js`](../../src/lib/launch-options.js), which both launchers share. Cashback is gone: `@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` for it and the program rejects it with 6082.
+- `mayhemMode` is hardcoded off. `holderReward` comes from `HOLDER_REWARD` through [`src/lib/launch-options.js`](../../src/lib/launch-options.js), which both launchers share. Cashback is gone: the program rejects it with 6082, and `launch-options.js` refuses `CASHBACK=true` before building anything (pump-sdk 4 encodes the flag as given; only its create-and-buy builders throw `CashbackDeprecatedError`).
 - Compute budget: 1,000 CU on Tx 1 (just transfers) and 300,000 CU on Tx 2 (`createV2` is heavy). Increase Tx 2's limit if the program upgrade ever pushes it over.

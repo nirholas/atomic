@@ -11,7 +11,7 @@ Collects accumulated creator fees from pump.fun's `coinCreatorVault` PDA and imm
 
 | Script | What it does |
 |---|---|
-| `collect-jito.js` | One-shot collect: `collectCoinCreatorFee` + transfer to `DESTINATION` + Jito tip, all in one tx inside a Jito bundle. Zero window for a competing collector. |
+| `collect-jito.js` | One-shot collect: `sweep_creator_fee` for each coin in `MINTS` + `collectCoinCreatorFee` + transfer to `DESTINATION` + Jito tip, all in one tx inside a Jito bundle. Zero window for a competing collector. |
 | `watch-collect.js` | Long-running poller. Reads the vault balance every 30 s; runs `collect-jito` when ≥ `MIN_COLLECT_SOL`. |
 | `consolidate.js` | One Jito bundle that **drains everything**: vault → safe wallet, creator wallet → safe wallet, funder wallet → safe wallet. Use when retiring a coin or shutting down a leaked key. |
 
@@ -31,6 +31,7 @@ cp .env.example .env  # fill in
 ```bash
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
+MINTS=<mint1>,<mint2> \
 JITO_TIP=0.005 \
   npm run collect
 ```
@@ -41,6 +42,7 @@ JITO_TIP=0.005 \
 DESTINATION=<safe-wallet> \
 CREATOR_PUBKEY=<base58-pubkey> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
+MINTS=<mint1>,<mint2> \
 MIN_COLLECT_SOL=0.05 \
   npm run watch
 ```
@@ -52,6 +54,7 @@ MIN_COLLECT_SOL=0.05 \
 ```bash
 DESTINATION=<safe-wallet> \
 FUNDER_SECRET=<base58> CREATOR_SECRET=<base58> \
+MINTS=<mint1>,<mint2> \
 JITO_TIP=0.01 \
   npm run consolidate
 ```
@@ -64,11 +67,13 @@ After this, the creator and funder wallets have only rent-exempt minimums. If yo
 - `DESTINATION` — base58 pubkey, the safe wallet receiving funds. **Should not be `CREATOR_PUBKEY` or `FUNDER` pubkey.**
 - `CREATOR_PUBKEY` — base58 pubkey, used by `watch-collect.js` to compute the vault PDA without needing the secret to derive it.
 - `FUNDER_SECRET`, `CREATOR_SECRET` — both required so the funder pays Jito tip and the creator signs `collectCoinCreatorFee`.
+- `MINTS`: comma-separated mints this creator launched (`MINT` works for one). Each coin's waiting creator fee is swept into the vault in the same tx before the collect.
 - `JITO_TIP` — SOL, default 0.005.
 - `MIN_COLLECT_SOL` — threshold for `watch-collect.js`.
 
 ## Gotchas
 
+- **Sweep before collect.** Since the October 2026 Pump upgrade, `buy_v3` / `sell_v3` and PumpSwap `buy_v2` / `sell_v2` leave the creator fee on the coin's curve or pool. The collect does not fail without a sweep; it just leaves those fees behind. Always pass `MINTS` so the scripts add `sweep_creator_fee` first. Pool fees arrive on the creator as wrapped SOL, not lamports.
 - **Sweeper bots.** A leaked creator key has other watchers. Any non-atomic flow (collect → wait → transfer) loses the SOL. The Jito bundle pattern here is the only safe option.
 - **Vault PDA.** Derived from the coin's mint and creator pubkey. `watch-collect.js` reads `CREATOR_PUBKEY` directly so you can monitor without ever loading the secret if the secret stays on a different host.
 - **Jito tip starvation.** If bundles silently fail (`watch-collect` reports zero landings while vault keeps growing), bump `JITO_TIP` first before debugging other failure modes.

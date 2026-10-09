@@ -1,6 +1,9 @@
 // Atomic collect-and-route via Jito bundle.
 // Single tx in the bundle:
 //   - Funder pays fee + Jito tip
+//   - Funder pays sweep_creator_fee for each coin in MINTS with fees waiting
+//     on its curve or pool (the new trade instructions leave the creator fee
+//     there until a sweep moves it into the creator vault)
 //   - Creator signs collectCoinCreatorFee  -> drains vault to creator
 //   - Creator signs system transfer        -> creator balance to DESTINATION
 // No insertion possible between ixs (single tx, atomic). Useful when the
@@ -11,6 +14,10 @@
 //   DESTINATION       — pubkey to send collected SOL to
 //   FUNDER_SECRET     — pays fee + tip + (collect's internal ATA rents)
 //   CREATOR_SECRET    — coin creator; signs the collect + drain
+//   MINTS             : comma-separated mints this creator launched. Their
+//                       waiting creator fees are swept into the vault first.
+//                       Without it only fees already in the vault are
+//                       collected (MINT is accepted for a single coin).
 //   JITO_TIP          — default 0.005 SOL (bump if not landing)
 //   PRIORITY          — compute unit priority microlamports (default 3000000)
 //   BUFFER_LAMPORTS   — lamports to leave in creator wallet (default 890880,
@@ -24,7 +31,11 @@ const {
   Connection, Keypair, PublicKey, SystemProgram,
   TransactionMessage, VersionedTransaction, ComputeBudgetProgram,
 } = require('@solana/web3.js');
-const { OnlinePumpSdk } = require('@nirholas/pump-sdk');
+const { OnlinePumpSdk } = require('@pump-fun/pump-sdk');
+const {
+  SWEEP_COMPUTE_UNITS, parseMintList, readPendingCreatorFees,
+  creatorFeeSweepInstructions, logPendingCreatorFees,
+} = require('./lib/creator-fee-sweep');
 
 const RPC_URL = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 const JITO_BUNDLE_URL = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
@@ -46,6 +57,7 @@ const TRANSFER_BUFFER_LAMPORTS = parseInt(process.env.BUFFER_LAMPORTS || '890880
 
 const funder = Keypair.fromSecretKey(bs58decode(process.env.FUNDER_SECRET));
 const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
+const MINTS = parseMintList(process.env.MINTS || process.env.MINT);
 
 (async () => {
   const c = new Connection(RPC_URL, 'confirmed');
@@ -56,8 +68,18 @@ const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
   console.log('Destination:             ', DESTINATION.toBase58());
 
   const vaultBalance = await sdk.getCreatorVaultBalance(creator.publicKey);
-  const vaultLamports = Number(vaultBalance);
-  console.log('Vault balance:', vaultLamports / 1e9, 'SOL');
+  const pending = await readPendingCreatorFees({ connection: c, creator: creator.publicKey, mints: MINTS });
+  // Fees swept off the curve land in the vault as lamports and are collected
+  // with it in this transaction.
+  const vaultLamports = Number(vaultBalance) + Number(pending.curveLamports);
+  console.log('Vault balance:', Number(vaultBalance) / 1e9, 'SOL');
+  if (MINTS.length > 0) {
+    console.log('Waiting on coins:');
+    logPendingCreatorFees(pending);
+  } else {
+    console.log('MINTS not set: fees still waiting on curves or pools will not be swept.');
+  }
+  console.log('Collectable now:', vaultLamports / 1e9, 'SOL');
 
   if (vaultLamports < 0.001 * 1e9) {
     console.error('Vault too small to bother. Aborting.');
@@ -77,8 +99,9 @@ const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
 
   const tipAccount = new PublicKey(JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]);
 
+  const sweepIxs = await creatorFeeSweepInstructions({ payer: funder.publicKey, creator: creator.publicKey, coins: pending.coins });
   const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
-  console.log('Collect ixs:', collectIxs.length);
+  console.log('Sweep ixs:', sweepIxs.length, '| Collect ixs:', collectIxs.length);
 
   const { blockhash, lastValidBlockHeight } = await c.getLatestBlockhash('confirmed');
   console.log('Blockhash:', blockhash);
@@ -88,12 +111,13 @@ const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
     recentBlockhash: blockhash,
     instructions: [
       ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY }),
-      ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 + SWEEP_COMPUTE_UNITS * sweepIxs.length }),
       SystemProgram.transfer({
         fromPubkey: funder.publicKey,
         toPubkey: tipAccount,
         lamports: Math.floor(JITO_TIP * 1e9),
       }),
+      ...sweepIxs,
       ...collectIxs,
       SystemProgram.transfer({
         fromPubkey: creator.publicKey,

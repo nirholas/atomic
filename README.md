@@ -124,7 +124,7 @@ cp .env.example .env
 | `src/metadata.js` | `npm run metadata` | Upload token metadata to pump.fun's IPFS endpoint. Returns a URI to pass to launchers. |
 | `src/fire-jito.js` | `npm run launch` | **Launch via Jito bundle.** Two-tx bundle: funder pays rent + tip in Tx1; creator pays own fee in Tx2 (createV2). Solscan "from" on the create = creator. |
 | `src/fire-atomic-create.js` | `npm run launch-single` | Single-tx create-only launch. No Jito needed. Fee payer = funder; on-chain creator = creator wallet (signed but not fee payer). |
-| `src/collect-jito.js` | `npm run collect` | Atomic creator-fee collection. Single tx: pump's `collectCoinCreatorFee` + drain to `DESTINATION`. No window for a competing collector with the same key. |
+| `src/collect-jito.js` | `npm run collect` | Atomic creator-fee collection. Single tx: `sweep_creator_fee` for each coin in `MINTS`, pump's `collectCoinCreatorFee`, then drain to `DESTINATION`. No window for a competing collector with the same key. |
 | `src/watch-collect.js` | `npm run watch` | Long-running poller that runs `collect-jito.js` whenever the vault accumulates ≥ threshold. |
 | `src/consolidate.js` | `npm run consolidate` | One-shot: collect creator vault + drain creator wallet + drain funder, all to `DESTINATION`, in one Jito bundle tx. |
 | `src/buy-jito.js` | `npm run buy` | Buy a token via Jupiter aggregator using a Jito bundle. Useful when pump-sdk's buy ix is out of sync with the live program. |
@@ -171,6 +171,7 @@ JITO_TIP=0.005 \
 DESTINATION=<your-safe-wallet> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
+MINTS=<mint1>,<mint2> \
   npm run collect
 
 # Long-running watcher (polls every 30s)
@@ -178,6 +179,7 @@ DESTINATION=<your-safe-wallet> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
 CREATOR_PUBKEY=<base58-pubkey> \
+MINTS=<mint1>,<mint2> \
 MIN_COLLECT_SOL=0.05 \
   npm run watch
 ```
@@ -194,6 +196,7 @@ All variables can be supplied via shell env or a `.env` file at the repo root. S
 | `FUNDER_KEYPAIR` / `CREATOR_KEYPAIR` | most | Alternative to the `*_SECRET` vars: filesystem path to a Solana CLI keypair JSON. |
 | `DESTINATION` | collect / consolidate / distribute | Safe wallet that drained SOL/tokens settle into. |
 | `CREATOR_PUBKEY` | `watch-collect.js` | Public key to poll for accumulated creator-fee vault balance. |
+| `MINTS` | collect / consolidate / watch-collect | Comma-separated mints the creator launched. Creator fees the new pump.fun trade instructions left on each coin's curve or pool are swept into the vault in the same tx before the collect. `MINT` works for one coin. |
 | `NAME`, `SYMBOL`, `URI` | metadata / launch | Token name, ticker, and metadata URI. |
 | `IMAGE_PATH` | `metadata.js` | Local image to upload to pump.fun IPFS. |
 | `DEV_BUY_SOL` | launch | Optional dev-buy size atomically bundled with the create. `0` to skip. |

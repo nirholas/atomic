@@ -10,12 +10,13 @@ RPCs, ATAs).
 **Bonding curve.** The pricing function for a pump.fun coin during
 its "pre-graduation" phase. Buying SOL into the curve mints tokens at
 an increasing price; selling burns at a decreasing price. Implemented
-on-chain by the pump program — `@nirholas/pump-sdk` exposes the math
+on-chain by the pump program — `@pump-fun/pump-sdk` exposes the math
 via `newBondingCurve` and `getBuyTokenAmountFromSolAmount`.
 
 **Cashback.** Trader rebate flag on `createV2`. Retired for new
-coins by the Pump program 2.0 (`create_v2` error 6082), and
-`@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` for it.
+coins by the Pump program 2.0 (`create_v2` error 6082);
+`@pump-fun/pump-sdk` 4 throws `CashbackDeprecatedError` from its
+create-and-buy builders.
 Existing cashback coins still trade and claim. The launchers reject
 `CASHBACK=true` and offer `HOLDER_REWARD=true` instead.
 

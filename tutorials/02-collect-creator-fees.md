@@ -29,17 +29,19 @@ Use this to test the setup before running a long watcher, or for occasional manu
 DESTINATION=<safe-wallet-pubkey> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
+MINTS=<mint1>,<mint2> \
 JITO_TIP=0.005 \
   npm run collect
 ```
 
 What's in the single tx that goes into the Jito bundle:
 
-1. `pumpfun::collectCoinCreatorFee` — pulls the vault balance into the creator wallet.
-2. `system::transfer` — moves the just-collected SOL (minus a tiny buffer) from creator → `DESTINATION`.
-3. Jito tip ix — paid by `FUNDER_SECRET`.
+1. `sweep_creator_fee`, once per coin in `MINTS` with a fee waiting: since the October 2026 Pump upgrade, `buy_v3` / `sell_v3` and PumpSwap `buy_v2` / `sell_v2` leave the creator fee on the coin's curve or pool, and this moves it into the vault. Paid by `FUNDER_SECRET`.
+2. `pumpfun::collectCoinCreatorFee` — pulls the vault balance into the creator wallet.
+3. `system::transfer` — moves the just-collected SOL (minus a tiny buffer) from creator → `DESTINATION`.
+4. Jito tip ix — paid by `FUNDER_SECRET`.
 
-All three happen in one tx that gets bundled. Zero window for a competing collector.
+All of them happen in one tx that gets bundled. Zero window for a competing collector.
 
 Expected output:
 
@@ -106,6 +108,7 @@ Also confirm the **creator wallet's balance has not increased** — the transfer
 | `CREATOR_PUBKEY` | yes (watch) | watch-collect | Lets watcher derive vault PDA without loading the secret |
 | `FUNDER_SECRET` | yes | both | Pays Jito tip + tx fee |
 | `CREATOR_SECRET` | yes | both | Signs `collectCoinCreatorFee` |
+| `MINTS` | recommended | both | Creator's mints; their waiting fees are swept before the collect (`MINT` works for one) |
 | `JITO_TIP` | no | both | SOL. Default 0.005 |
 | `MIN_COLLECT_SOL` | yes (watch) | watch-collect | Vault threshold to trigger collect |
 

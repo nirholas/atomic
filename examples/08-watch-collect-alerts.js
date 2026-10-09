@@ -18,7 +18,8 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { OnlinePumpSdk } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@pump-fun/pump-sdk';
+import { readPendingCreatorFees, creatorFeeSweepInstructions } from '../src/lib/creator-fee-sweep.js';
 
 const TIP_ACCOUNT = new PublicKey('T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt');
 
@@ -61,17 +62,27 @@ await sendTelegram(`📡 <b>Watch-collect started</b> for <code>${mint.toBase58(
 while (true) {
   try {
     // Creator vaults are per creator, not per mint: this sums the bonding-curve
-    // vault and the PumpSwap vault for every coin this creator launched.
-    const vaultBalance = Number(await sdk.getCreatorVaultBalanceBothPrograms(creator.publicKey));
+    // vault and the PumpSwap vault for every coin this creator launched. Fees
+    // the new trade instructions left on this coin's curve and pool are not in
+    // a vault until swept, so they are added separately.
+    const pending = await readPendingCreatorFees({ connection: conn, creator: creator.publicKey, mints: [mint] });
+    const vaultBalance = Number(await sdk.getCreatorVaultBalanceBothPrograms(creator.publicKey))
+      + Number(pending.curveLamports) + Number(pending.poolLamports);
+    // The bonding-curve vault pays out lamports; the PumpSwap vault pays out
+    // wrapped SOL to the creator's token account, so only the lamports are
+    // forwarded here.
+    const forwardLamports = Number(await sdk.getCreatorVaultBalance(creator.publicKey)) + Number(pending.curveLamports);
 
     if (vaultBalance >= minLamports) {
-      console.log(`Vault has ${vaultBalance / LAMPORTS_PER_SOL} SOL — collecting`);
+      console.log(`Vault has ${vaultBalance / LAMPORTS_PER_SOL} SOL, collecting`);
+      const sweepIxs = await creatorFeeSweepInstructions({ payer: funder.publicKey, creator: creator.publicKey, coins: pending.coins });
       const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
 
       const { blockhash } = await conn.getLatestBlockhash('confirmed');
       const tx = new Transaction({ feePayer: funder.publicKey, recentBlockhash: blockhash }).add(
+        ...sweepIxs,
         ...collectIxs,
-        SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: destination, lamports: vaultBalance }),
+        SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: destination, lamports: forwardLamports }),
         SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: TIP_ACCOUNT, lamports: tipLamports }),
       );
       tx.sign(funder, creator);

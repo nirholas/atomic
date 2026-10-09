@@ -27,7 +27,7 @@ CI runs `typecheck` + `test` on Node 20 and 22 for every PR. Local pass != green
 - **Anything touching the Jito bundle layout.** Re-read [`docs/architecture.md`](docs/architecture.md#bundle-layouts-in-this-repo). The funder/creator split, the order of instructions inside a single tx, and which signer is fee payer are all load-bearing — change one and you can introduce a race window for sweeper bots.
 - **The pump.fun fee recipient list in [`src/lib/programs.ts`](src/lib/programs.ts).** This is consulted by [`detectSeededByPump`](src/lib/funding-source.ts). When pump.fun rolls out a new fee recipient (they do this on program upgrades), update the list with the new pubkey and bump the legacy/new comments.
 - **The hardcoded Jito tip account list.** Lives in every `src/*-jito.js`. If it rotates, every script needs the same edit — keep them in sync. (Eventually this should be a shared constant; for now it's duplicated by design to keep each script self-contained.)
-- **pump-sdk version drift.** When `@nirholas/pump-sdk` releases include new required accounts in `createV2Instruction` or `collectCoinCreatorFeeInstructions`, the scripts inherit the change automatically — but the inline comments in [`docs/scripts/`](docs/scripts/) describing tx sizes / CU usage may become stale. Update them.
+- **pump-sdk version drift.** When `@pump-fun/pump-sdk` releases include new required accounts in `createV2Instruction` or `collectCoinCreatorFeeInstructions`, the scripts inherit the change automatically — but the inline comments in [`docs/scripts/`](docs/scripts/) describing tx sizes / CU usage may become stale. Update them.
 
 ## Code style
 

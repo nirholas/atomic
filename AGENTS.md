@@ -41,7 +41,7 @@ Instructions for AI coding agents (OpenAI Codex, Cursor, Aider, Cline, Continue,
 | Rule | Why |
 |------|-----|
 | No real secrets in code, comments, commit messages, or test fixtures. | A leaked Solana secret is drained in seconds. |
-| No bumping `@nirholas/pump-sdk` / `@pump-fun/*` without reading the changelog and the V2 USDC doc set. | pump.fun upgrades silently add required accounts; outdated SDKs produce invalid txs. |
+| No bumping `@pump-fun/pump-sdk` / `@pump-fun/*` without reading the changelog and the V2 USDC doc set. | pump.fun upgrades silently add required accounts; outdated SDKs produce invalid txs. |
 | No bypassing pre-flight assertions in scripts. | They exist because the alternative was losing funds. |
 | No `--no-verify`, `--no-gpg-sign`, or other hook bypasses. | Hooks exist for correctness, not friction. |
 | No reformatting unrelated lines. | Makes diffs unreviewable. |

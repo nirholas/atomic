@@ -30,7 +30,7 @@ RPC_URL=...                     # paid provider strongly recommended for long-ru
 FUNDER_SECRET=<base58>          # or FUNDER_KEYPAIR=./funder.json
 CREATOR_PUBKEY=<base58>         # pubkey only; the script doesn't need the secret for polling
 CREATOR_SECRET=<base58>         # needed to sign the collect ix when threshold is met
-MINT=<base58>                   # the pump.fun coin's mint
+MINT=<base58>                   # the pump.fun coin's mint (or MINTS=<a>,<b> for several); its waiting creator fee is swept before each collect
 DESTINATION=<base58>            # safe wallet for the drained SOL
 MIN_COLLECT_SOL=0.05            # vault threshold (SOL) before firing collect
 POLL_INTERVAL_SECONDS=30        # default 30; lower if your RPC supports it

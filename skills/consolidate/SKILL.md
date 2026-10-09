@@ -7,7 +7,7 @@ description: Use when the user wants to drain a coin's creator vault plus the cr
 
 `src/consolidate.js` is a one-shot script that builds a single Jito bundle which:
 
-1. **Collects** the coin's creator-fee vault (via PumpSwap's `collectCoinCreatorFee`).
+1. **Sweeps** the creator fee the new pump.fun trade instructions left waiting on the coin's curve and pool into the vault, then **collects** the vault (via `collectCoinCreatorFee`).
 2. **Transfers** all SOL from the creator wallet to `DESTINATION`.
 3. **Transfers** all SOL (minus a small reserve for the bundle's own fees) from the funder wallet to `DESTINATION`.
 
@@ -33,7 +33,7 @@ Skip this skill if the user only wants:
 RPC_URL=...
 FUNDER_SECRET=<base58>          # or FUNDER_KEYPAIR=./funder.json
 CREATOR_SECRET=<base58>         # or CREATOR_KEYPAIR=./creator.json
-MINT=<base58>                   # the pump.fun coin's mint
+MINT=<base58>                   # the pump.fun coin's mint (or MINTS=<a>,<b>); its waiting creator fee is swept first
 DESTINATION=<base58>            # safe wallet; refuses to run if == funder
 JITO_TIP=0.005                  # raise to 0.01-0.02 in busy markets
 ```

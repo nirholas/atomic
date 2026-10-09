@@ -1,9 +1,11 @@
 // Launch-mode options shared by the pump.fun launchers (fire-jito.js,
 // fire-atomic-create.js).
 //
-// @nirholas/pump-sdk 2 tracks the Pump program's 2.0 upgrade:
-//   - create_v2 rejects new cashback coins (Pump error 6082), and the SDK
-//     throws CashbackDeprecatedError before building such an instruction.
+// Pump program rules these options follow (@pump-fun/pump-sdk 4):
+//   - create_v2 rejects new cashback coins (Pump error 6082). The SDK's
+//     createV2Instruction encodes the flag as given and only the
+//     create-and-buy builders throw CashbackDeprecatedError, so this module
+//     refuses CASHBACK=true itself before any bundle is built.
 //   - holder-reward coins route the creator fee to holderRewardsPda(mint)
 //     instead of the creator wallet, and create_v2 rejects them with 6084
 //     while Global.isHolderRewardEnabled is false.
@@ -12,7 +14,7 @@
 //   HOLDER_REWARD  true|false (default false). Launch a holder-reward coin.
 //   CASHBACK       rejected when truthy. Kept only to fail loudly for old configs.
 
-const { holderRewardsPda } = require('@nirholas/pump-sdk');
+const { holderRewardsPda } = require('@pump-fun/pump-sdk');
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 const FALSE_VALUES = new Set(['', '0', 'false', 'no', 'off']);

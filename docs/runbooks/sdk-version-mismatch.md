@@ -54,13 +54,13 @@ The Anchor discriminator is the first 8 bytes of an instruction's data, derived 
 Check your SDK version:
 
 ```bash
-npm ls @nirholas/pump-sdk
+npm ls @pump-fun/pump-sdk
 ```
 
 If outdated, bump:
 
 ```bash
-npm i @nirholas/pump-sdk@latest
+npm i @pump-fun/pump-sdk@latest
 ```
 
 Then re-run the operation. If the operation succeeds, the SDK had the fix.
@@ -86,7 +86,7 @@ When pump.fun adds a new fee account (e.g. "buyback fee recipient"), the `buy` a
 **Symptom:** `buy` reverts with `AccountNotFound` or `AccountNotProvided`.
 
 **Fix:**
-1. Bump `@nirholas/pump-sdk` to the version that includes the new fee recipient.
+1. Bump `@pump-fun/pump-sdk` to the version that includes the new fee recipient.
 2. If no SDK version is available yet, **route the buy through Jupiter** via [`buy-jito.js`](../scripts/buy-jito.md). Jupiter's pump.fun adapter typically updates within hours of a program change.
 
 This is *the* most common SDK-mismatch scenario. The toolkit's `buy-jito.js` exists primarily for this reason.
@@ -130,7 +130,7 @@ The migration authority can be rotated (e.g. for security or contractual reasons
 When you confirm it's an SDK mismatch (not your own bug):
 
 1. **Pause the affected scripts.** Don't keep retrying — failed bundles cost tips even when they revert.
-2. **Bump the SDK.** `npm i @nirholas/pump-sdk@latest` and check the release notes for the affected ix.
+2. **Bump the SDK.** `npm i @pump-fun/pump-sdk@latest` and check the release notes for the affected ix.
 3. **Sim before resubmitting.** `simulateTransaction` will catch the same error pre-flight without paying a tip.
 4. **If no SDK version yet exists for the new program version:**
    - For buys, switch to `buy-jito.js` (Jupiter route).
@@ -141,12 +141,12 @@ When you confirm it's an SDK mismatch (not your own bug):
 
 ## Watching for SDK staleness proactively
 
-The toolkit pins `@nirholas/pump-sdk` to a `^1.33.0` range in [`package.json`](../../package.json). That accepts minor updates automatically; major version bumps require an explicit bump.
+The toolkit pins `@pump-fun/pump-sdk` to a `^4.0.0` range in [`package.json`](../../package.json). That accepts minor updates automatically; major version bumps require an explicit bump.
 
 To stay current:
 
-1. Watch [the SDK's releases page](https://github.com/anthropics/pump-sdk/releases) (subscribe to release notifications).
-2. Run `npm outdated @nirholas/pump-sdk` weekly.
+1. Watch [the SDK's releases page](https://github.com/pump-fun/pump-sdk/releases) (subscribe to release notifications).
+2. Run `npm outdated @pump-fun/pump-sdk` weekly.
 3. Test SDK upgrades on devnet first, if pump.fun has a devnet deployment of the new version.
 
 You don't have to be on the latest SDK at all times. But you should be no more than one minor version behind, and you should be aware *when* you're behind.
@@ -170,4 +170,4 @@ This dumps the canonical IDL. Compare against what the SDK exports to find diffs
 - [`docs/pump-fun-protocol.md`](../pump-fun-protocol.md) — program IDs, accounts, instructions reference
 - [`docs/v2-usdc-rollout/`](../v2-usdc-rollout/) — the most recent program upgrade
 - [`docs/scripts/buy-jito.md`](../scripts/buy-jito.md) — Jupiter fallback for buys
-- [`@nirholas/pump-sdk` releases](https://github.com/anthropics/pump-sdk/releases) — upstream version history
+- [`@pump-fun/pump-sdk` releases](https://github.com/pump-fun/pump-sdk/releases) — upstream version history

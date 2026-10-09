@@ -32,7 +32,7 @@
 const bs58mod = require('bs58');
 const bs58decode = bs58mod.default ? bs58mod.default.decode : bs58mod.decode;
 const { Connection, Keypair, SystemProgram } = require('@solana/web3.js');
-const { PUMP_SDK, OnlinePumpSdk } = require('@nirholas/pump-sdk');
+const { PUMP_SDK, OnlinePumpSdk } = require('@pump-fun/pump-sdk');
 const {
   buildSignedTransaction, estimateLoadedAccountsDataSizeLimit, parseComputeUnitLimit,
   resolvePriorityFeeLamports, resolveTransactionVersion, sendSignedTransaction, simulateSignedTransaction,

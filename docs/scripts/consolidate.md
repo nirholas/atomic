@@ -27,6 +27,7 @@ For repeated automated collects without draining the funder, use [`collect-jito`
 | `FUNDER_SECRET` | **yes** | — | Signs Tx, pays fee + Jito tip, *and* is itself drained at the end. |
 | `CREATOR_SECRET` | **yes** | — | Signs `collectCoinCreatorFee` and the creator-drain transfer. |
 | `DESTINATION` | **yes** | — | Pubkey where everything lands. |
+| `MINTS` | recommended | none | Comma- or space-separated mints this creator launched. Creator fees waiting on their bonding curves and pools are swept into the vaults in the same tx before the collect, as in [`collect-jito`](collect-jito.md#notes). `MINT` is accepted for a single coin. |
 | `JITO_TIP` | no | `0.005` | SOL. |
 | `PRIORITY` | no | `2000000` | Compute-unit price. |
 | `RPC_URL` | no | mainnet-beta | |
@@ -38,15 +39,16 @@ Two hardcoded buffers inside [`src/consolidate.js`](../../src/consolidate.js) th
 
 ## What it does
 
-1. Reads vault balance, funder balance, creator balance.
+1. Reads vault balance, funder balance, creator balance, and the creator fees waiting on each coin in `MINTS`. `vaultBal` includes the curve fees about to be swept.
 2. Computes drain amounts:
    - `funderDrain = funderBal - tip - txFee - FUNDER_BUFFER`
    - `creatorDrain = creatorBal + vaultBal - CREATOR_BUFFER`
 3. Exits if `funderDrain <= 0` (funder can't even cover tip+fees).
 4. Picks a Jito tip account at random.
 5. Builds one tx with these ixs:
-   - `setComputeUnitPrice` / `setComputeUnitLimit(100000)`
+   - `setComputeUnitPrice` / `setComputeUnitLimit(100000 + 40000 per sweep)`
    - `SystemProgram.transfer(funder → tipAccount, JITO_TIP)`
+   - the curve and pool `sweep_creator_fee` instructions for coins with fees waiting (funder pays)
    - `...sdk.collectCoinCreatorFeeInstructions(creator, funder)`
    - `SystemProgram.transfer(creator → DESTINATION, creatorDrain)`
    - `SystemProgram.transfer(funder → DESTINATION, funderDrain)`

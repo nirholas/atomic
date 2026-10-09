@@ -19,7 +19,7 @@ updates:
           - '@types/*'
     ignore:
       # pump-sdk drift is handled manually — pinning expectations matter here
-      - dependency-name: '@nirholas/pump-sdk'
+      - dependency-name: '@pump-fun/pump-sdk'
 
   - package-ecosystem: github-actions
     directory: /

@@ -45,9 +45,9 @@ Required base vars: `RPC_URL`, `FUNDER_SECRET`, `CREATOR_SECRET` (base58) or `FU
 | `metadata.js` | Upload token metadata + image to pump.fun IPFS; prints a URI. | `NAME`, `SYMBOL`, `IMAGE_PATH` |
 | `fire-jito.js` | **Jito 2-tx bundle launch.** Funder pays rent + Jito tip in Tx1; creator pays own fee in Tx2 (createV2). On-chain creator = `CREATOR_SECRET`'s pubkey. | `NAME`, `SYMBOL`, `URI`, `FUNDER_SECRET`, `CREATOR_SECRET`, `JITO_TIP`, optional `DEV_BUY_SOL` |
 | `fire-atomic-create.js` | Single-tx create. Fee payer = funder; creator signs but does not pay. No Jito. | Same as above minus `JITO_TIP` |
-| `collect-jito.js` | One-tx atomic creator-fee collect → `DESTINATION`. No window for a competing key-holder. | `DESTINATION`, `FUNDER_SECRET`, `CREATOR_SECRET` |
-| `watch-collect.js` | Long-running poller; runs `collect-jito` when vault ≥ `MIN_COLLECT_SOL`. | `CREATOR_PUBKEY`, `MIN_COLLECT_SOL`, `DESTINATION`, secrets |
-| `consolidate.js` | One Jito bundle: collect vault + drain creator + drain funder → `DESTINATION`. | `DESTINATION`, both secrets |
+| `collect-jito.js` | One-tx atomic creator-fee collect → `DESTINATION`, sweeping each coin's waiting creator fee into the vault first. No window for a competing key-holder. | `DESTINATION`, `FUNDER_SECRET`, `CREATOR_SECRET`, `MINTS` |
+| `watch-collect.js` | Long-running poller; runs `collect-jito` when vault ≥ `MIN_COLLECT_SOL`. | `CREATOR_PUBKEY`, `MINTS`, `MIN_COLLECT_SOL`, `DESTINATION`, secrets |
+| `consolidate.js` | One Jito bundle: collect vault + drain creator + drain funder → `DESTINATION`. | `DESTINATION`, `MINTS`, both secrets |
 | `buy-jito.js` | Jupiter buy inside a Jito bundle. Use when pump-sdk's buy ix is out of sync with the live program. | `TARGET_MINT`, `BUY_SOL`, `SLIPPAGE_BPS` |
 | `rescue-tokens.js` | Atomic SPL / Token-2022 transfer via Jito bundle. Bot cannot insert. | secrets, destination, mint |
 | `distribute.js` | Sqrt-weighted USDC rewards to holders. `EMERGENCY=1` sweeps to one address. | `MINT`, `REWARD_PERCENT`, `MIN_BPS` |
@@ -69,7 +69,7 @@ FUNDER_SECRET=... CREATOR_SECRET=... JITO_TIP=0.005 \
 **Auto-collect for a leaked creator key:**
 
 ```bash
-DESTINATION=<safe-wallet> CREATOR_PUBKEY=<base58> MIN_COLLECT_SOL=0.05 \
+DESTINATION=<safe-wallet> CREATOR_PUBKEY=<base58> MINTS=<mint> MIN_COLLECT_SOL=0.05 \
 FUNDER_SECRET=... CREATOR_SECRET=... \
   npm run watch
 ```

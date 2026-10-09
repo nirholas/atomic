@@ -2,7 +2,7 @@
 
 A protocol-level reference for the pump.fun program: program IDs, the PDAs every script derives, the instructions this toolkit calls, the event layouts, and the on-chain accounts you'll touch.
 
-The [`@nirholas/pump-sdk`](https://github.com/anthropics/pump-sdk) handles most of these details for you — this page documents what the SDK is doing under the hood so you can reason about failure modes and debug without diving into the SDK source.
+The [`@pump-fun/pump-sdk`](https://github.com/pump-fun/pump-sdk) handles most of these details for you — this page documents what the SDK is doing under the hood so you can reason about failure modes and debug without diving into the SDK source.
 
 For the V2 USDC quote-mint upgrade specifically, see [`docs/v2-usdc-rollout/`](v2-usdc-rollout/).
 
@@ -279,7 +279,7 @@ When pump.fun ships a new program upgrade:
 2. Discriminators (sighashes) for new ixs are different — old SDK versions get rejected with `InvalidInstructionData`.
 3. The SDK needs to bump to match.
 
-Watch [`@nirholas/pump-sdk` releases](https://github.com/anthropics/pump-sdk/releases) for version bumps. This toolkit pins the SDK to a `^1.33.0` peer dep range; bump that range when the SDK ships a major change.
+Watch [`@pump-fun/pump-sdk` releases](https://github.com/pump-fun/pump-sdk/releases) for version bumps. This toolkit depends on the SDK with a `^4.0.0` range; bump that range when the SDK ships a major change.
 
 ---
 

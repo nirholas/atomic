@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { CashbackDeprecatedError, PUMP_SDK, holderRewardsPda } from '@nirholas/pump-sdk';
+import { PUMP_SDK, holderRewardsPda } from '@pump-fun/pump-sdk';
 
 const {
   parseBooleanFlag,
@@ -85,9 +85,19 @@ describe('describing the fee recipient', () => {
   });
 });
 
-describe('@nirholas/pump-sdk 2 create_v2 encoding', () => {
-  it('throws CashbackDeprecatedError before building a cashback launch', async () => {
-    await expect(PUMP_SDK.createV2Instruction(createArgs({ cashback: true }))).rejects.toBeInstanceOf(CashbackDeprecatedError);
+describe('@pump-fun/pump-sdk 4 create_v2 encoding', () => {
+  it('encodes a cashback flag as given, so the launcher guard is what stops it', async () => {
+    // pump-sdk 4 no longer throws for cashback in createV2Instruction: it
+    // encodes the flag and leaves the program to reject it with 6082. The
+    // CASHBACK guard in resolveLaunchOptions is therefore the only check
+    // before a launch pays for a doomed bundle.
+    const base = createArgs();
+    const standard = await PUMP_SDK.createV2Instruction(base);
+    const cashback = await PUMP_SDK.createV2Instruction({ ...base, cashback: true });
+    expect(cashback.data.length).toBe(standard.data.length);
+    const differing = [...cashback.data].filter((byte, i) => byte !== standard.data[i]);
+    expect(differing).toEqual([1]);
+    expect(() => resolveLaunchOptions({ CASHBACK: 'true' })).toThrow(/6082/);
   });
 
   it('encodes the holder-reward flag as the trailing create_v2 byte', async () => {

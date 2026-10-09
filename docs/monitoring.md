@@ -136,7 +136,7 @@ This is a "push" pattern — events arrive as they happen.
 
 ### 4c. Use the SDK's event decoders
 
-[`@nirholas/pump-sdk`](https://github.com/anthropics/pump-sdk) exports typed event decoders for V2 events (this repo's [`refactor(channel): use typed V2 event decoders`](https://github.com/anthropics/atomic/commit/54768bc) commit added the upstream usage). Wherever possible, lean on the SDK rather than hand-rolling Borsh decoders.
+[`@pump-fun/pump-sdk`](https://github.com/pump-fun/pump-sdk) exports typed event decoders for V2 events (this repo's [`refactor(channel): use typed V2 event decoders`](https://github.com/anthropics/atomic/commit/54768bc) commit added the upstream usage). Wherever possible, lean on the SDK rather than hand-rolling Borsh decoders.
 
 ---
 

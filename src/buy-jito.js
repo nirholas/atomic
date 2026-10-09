@@ -2,7 +2,7 @@
 //   Tx 1: funder transfers SOL to buyer + Jito tip (atomic with Tx 2)
 //   Tx 2: buyer signs Jupiter swap (SOL -> TARGET_MINT)
 //
-// Use this when the buy ix in @nirholas/pump-sdk is incompatible with the
+// Use this when the buy ix in @pump-fun/pump-sdk is incompatible with the
 // live program (e.g., new required accounts). Jupiter handles routing.
 //
 // WARNING: if BUYER_SECRET corresponds to a public/leaked key, sweeper bots

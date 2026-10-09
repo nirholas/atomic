@@ -44,7 +44,7 @@ This repo ships Node scripts that **sign and broadcast real Solana transactions*
 1. **Never edit a file under `src/` without manual on-chain verification.** Those are the production scripts. If you must change one, document the change in the PR description with a Solscan link from a throwaway-wallet test run.
 2. **Never commit secrets.** `.env`, base58 secrets, keypair JSONs outside the `*.json` ignore. Run `git status` before every commit. If you see anything that looks like a secret in the diff, bail.
 3. **Never bypass pre-flight assertions.** Scripts have explicit balance checks, account-count checks, slippage caps. They exist because the alternative was losing funds. If a check trips, fix the root cause; don't `try/catch` it away.
-4. **Never bump `@nirholas/pump-sdk` or `@pump-fun/*` without reading their changelogs.** pump.fun on-chain upgrades regularly add required accounts to buy/sell instructions and silently invalidate old SDK output.
+4. **Never bump `@pump-fun/pump-sdk` or `@pump-fun/*` without reading their changelogs.** pump.fun on-chain upgrades regularly add required accounts to buy/sell instructions and silently invalidate old SDK output.
 5. **Never disable signing hooks or skip CI.** No `--no-verify`, no `--no-gpg-sign`. If a hook fails, fix the issue.
 
 ## Soft preferences

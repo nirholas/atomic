@@ -196,7 +196,7 @@ async function main(): Promise<void> {
   // ── Creator-fee vault (if creator parsed and pump-sdk is installed) ─
   if (rpcOk && creator) {
     try {
-      const sdkModule = (await import('@nirholas/pump-sdk')) as { OnlinePumpSdk?: new (c: Connection) => { getCreatorVaultBalance: (pk: PublicKey) => Promise<{ toString(): string }> } };
+      const sdkModule = (await import('@pump-fun/pump-sdk')) as { OnlinePumpSdk?: new (c: Connection) => { getCreatorVaultBalance: (pk: PublicKey) => Promise<{ toString(): string }> } };
       if (sdkModule.OnlinePumpSdk) {
         const sdk = new sdkModule.OnlinePumpSdk(connection);
         const vaultRaw = await sdk.getCreatorVaultBalance(creator.publicKey);

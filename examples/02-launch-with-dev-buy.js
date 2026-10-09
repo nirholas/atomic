@@ -23,7 +23,7 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { OnlinePumpSdk } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@pump-fun/pump-sdk';
 import { describeFeeRecipient, resolveLaunchOptions } from '../src/lib/launch-options.js';
 import BN from 'bn.js';
 

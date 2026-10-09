@@ -1,17 +1,23 @@
 // Continuous watcher: polls creator vault every POLL_MS, fires collect-jito.js
 // when accumulated balance exceeds MIN_COLLECT_SOL. Retries on Jito errors.
+// With MINTS set, the creator fees still waiting on those coins' curves count
+// toward the threshold too (collect-jito.js sweeps them before collecting).
 //
 // Env:
 //   CREATOR_PUBKEY    — base58 pubkey of the coin creator (whose vault to watch)
 //   DESTINATION       — where collected SOL ultimately lands (forwarded to collect-jito.js)
 //   FUNDER_SECRET     — funder secret (forwarded to collect-jito.js for tip + fees)
 //   CREATOR_SECRET    — creator secret (forwarded to collect-jito.js for signing)
+//   MINTS             : the creator's mints (forwarded to collect-jito.js, which
+//                       sweeps their waiting fees; MINT also works)
 //   POLL_MS           — default 30000
 //   MIN_COLLECT_SOL   — default 0.05
 
 const { spawn } = require('child_process');
+const path = require('path');
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { OnlinePumpSdk } = require('@nirholas/pump-sdk');
+const { OnlinePumpSdk } = require('@pump-fun/pump-sdk');
+const { parseMintList, readPendingCreatorFees } = require('./lib/creator-fee-sweep');
 
 const RPC_URL = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 const POLL_MS = parseInt(process.env.POLL_MS || '30000', 10);
@@ -22,6 +28,7 @@ if (!process.env.CREATOR_PUBKEY) {
   process.exit(1);
 }
 const CREATOR_PUBKEY = new PublicKey(process.env.CREATOR_PUBKEY);
+const MINTS = parseMintList(process.env.MINTS || process.env.MINT);
 
 const c = new Connection(RPC_URL, 'confirmed');
 const sdk = new OnlinePumpSdk(c);
@@ -29,7 +36,7 @@ const sdk = new OnlinePumpSdk(c);
 function runCollectOnce() {
   return new Promise((resolve) => {
     const env = { ...process.env, BUFFER_LAMPORTS: '890880' };
-    const child = spawn('node', ['collect-jito.js'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [path.join(__dirname, 'collect-jito.js')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '', err = '';
     child.stdout.on('data', d => out += d);
     child.stderr.on('data', d => err += d);
@@ -46,12 +53,14 @@ let totalSuccessful = 0;
   console.log('  poll every: ', POLL_MS / 1000, 's');
   console.log('  threshold:  ', MIN_COLLECT_SOL, 'SOL');
   console.log('  destination:', process.env.DESTINATION);
+  console.log('  coins:      ', MINTS.length > 0 ? MINTS.map((m) => m.toBase58()).join(', ') : '(MINTS not set: waiting curve fees are not counted or swept)');
   console.log('');
 
   while (true) {
     try {
       const vault = await sdk.getCreatorVaultBalance(CREATOR_PUBKEY);
-      const sol = Number(vault) / 1e9;
+      const pending = await readPendingCreatorFees({ connection: c, creator: CREATOR_PUBKEY, mints: MINTS });
+      const sol = (Number(vault) + Number(pending.curveLamports)) / 1e9;
       const ts = new Date().toISOString().slice(11, 19);
 
       if (sol >= MIN_COLLECT_SOL) {

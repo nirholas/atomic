@@ -20,6 +20,7 @@ A long-running poller. Polls the creator-vault balance every `POLL_MS` and, when
 | `CREATOR_PUBKEY` | **yes** | — | Base58 *pubkey* (not secret) of the creator whose vault to poll. |
 | `POLL_MS` | no | `30000` | Poll interval, ms. |
 | `MIN_COLLECT_SOL` | no | `0.05` | Vault threshold (SOL) before firing a collect. |
+| `MINTS` | recommended | none | The creator's mints. Creator fees still waiting on their bonding curves count toward the threshold, and the forwarded collect sweeps them (and any pool fees) before collecting. `MINT` is accepted for a single coin. |
 | `RPC_URL` | no | mainnet-beta | Same RPC for polling and (forwarded to) `collect-jito.js`. |
 
 Plus everything [`collect-jito.js`](collect-jito.md) needs — **the watcher forwards its entire `process.env`** to the child, with `BUFFER_LAMPORTS` forced to `890880`:
@@ -35,7 +36,7 @@ Plus everything [`collect-jito.js`](collect-jito.md) needs — **the watcher for
 
 ```
 loop forever:
-  poll the creator vault balance
+  poll the creator vault balance + the curve fees waiting on MINTS
   if balance < MIN_COLLECT_SOL:
     print one-line status (overwriting), keep looping
   else:
@@ -54,6 +55,7 @@ DESTINATION=<base58 pubkey> \
 FUNDER_SECRET=<base58> \
 CREATOR_SECRET=<base58> \
 CREATOR_PUBKEY=<base58 pubkey> \
+MINTS=<mint1>,<mint2> \
 MIN_COLLECT_SOL=0.05 \
 POLL_MS=30000 \
 npm run watch
@@ -111,6 +113,6 @@ WantedBy=multi-user.target
 ## Notes
 
 - The watcher uses `child_process.spawn('node', ['src/collect-jito.js'], …)`. It runs *the same script you'd run by hand*, with the same exit semantics. If you want to dry-run, replace the command with `echo` in [`src/watch-collect.js`](../../src/watch-collect.js).
-- Vault balance reads go through `@nirholas/pump-sdk`'s `OnlinePumpSdk.getCreatorVaultBalance`, which is a single RPC call (an account read). Cheap; safe to poll every 30 s on any provider.
+- Vault balance reads go through `@pump-fun/pump-sdk`'s `OnlinePumpSdk.getCreatorVaultBalance`, which is a single RPC call (an account read). Cheap; safe to poll every 30 s on any provider.
 - The watcher itself doesn't need `FUNDER_SECRET` / `CREATOR_SECRET` for polling — it only forwards them to the child. So you can technically run the watcher with only `CREATOR_PUBKEY` set… but then every fired collect will fail until the child's required vars are present. Always set them all.
 - There's no per-coin cap: the watcher will keep firing forever. If you only want to collect N times, wrap in a shell loop with a counter instead.

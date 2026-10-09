@@ -97,7 +97,7 @@ The toolkit assumes:
 
 The toolkit explicitly does **not** defend against:
 
-- **Compromised JS dependencies.** A malicious version of `@nirholas/pump-sdk` or `bs58` would compromise everything. Pin lockfiles, audit `npm ci`.
+- **Compromised JS dependencies.** A malicious version of `@pump-fun/pump-sdk` or `bs58` would compromise everything. Pin lockfiles, audit `npm ci`.
 - **Funder-key compromise.** If your funder is keylogged or phished, every script using it is compromised. Treat the funder as a hot wallet.
 - **Phishing of RPC API keys.** Treat your Helius/Triton key as a secret.
 - **Social engineering of the operator.** "Hi, I'm pump.fun support, please send me the keypair for verification." No, they aren't, don't.

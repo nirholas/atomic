@@ -2,7 +2,7 @@
 
 Holder rewards are a pump.fun launch mode introduced with the Pump program 2.0 upgrade. A holder-reward coin has no creator wallet collecting its fees: the creator recorded on the bonding curve is a program-derived address, `holderRewardsPda(mint)`, and pump.fun pays the accumulated creator fees out to the coin's token holders.
 
-It is also the replacement for cashback on new coins. `create_v2` rejects new cashback coins with error 6082, and `@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` before it builds such an instruction. See [cashback.md](./cashback.md) for what still works on existing cashback coins.
+It is also the replacement for cashback on new coins. `create_v2` rejects new cashback coins with error 6082, and `@pump-fun/pump-sdk` 4 throws `CashbackDeprecatedError` from its create-and-buy builders (its bare `createV2Instruction` encodes the flag and lets the program refuse it). See [cashback.md](./cashback.md) for what still works on existing cashback coins.
 
 ## On-chain shape
 
@@ -43,7 +43,7 @@ Read-only; needs only an RPC URL:
 
 ```js
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { OnlinePumpSdk, holderRewardsPda } = require('@nirholas/pump-sdk');
+const { OnlinePumpSdk, holderRewardsPda } = require('@pump-fun/pump-sdk');
 
 (async () => {
   const sdk = new OnlinePumpSdk(new Connection(process.env.RPC_URL, 'confirmed'));

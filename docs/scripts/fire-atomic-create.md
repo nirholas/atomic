@@ -90,7 +90,7 @@ Same atomicity guarantee (single Solana tx is atomic by definition), different "
 | `Funder needs >=` | Funder under-funded. | Top up to ≥ `RENT_SOL + 0.005`. |
 | `Transaction is N bytes; version 1 limit is 4096` | The tx outgrew the v1 envelope. | The create tx is normally under 1 KB. If a `pump-sdk` upgrade added this many accounts, split the work with [`fire-jito`](fire-jito.md). |
 | `Transaction exceeds the version 0 limit of 1232 bytes` | Running with `TRANSACTION_VERSION=0`. | Drop the fallback and use v1, which has more than three times the room. |
-| `Sim failed: …` | `createV2` reverted in simulation. | Read the printed `Logs:` block. Most likely cause: stale `@nirholas/pump-sdk` vs. live program. |
+| `Sim failed: …` | `createV2` reverted in simulation. | Read the printed `Logs:` block. Most likely cause: stale `@pump-fun/pump-sdk` vs. live program. |
 | `Tx errored` after send | Tx landed on-chain but failed. | Same root cause as sim failure but raced past the sim — should be rare. |
 
 ## Notes

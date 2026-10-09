@@ -25,6 +25,17 @@ solana balance $(pump-cli derive-vault --mint <MINT>)
 
 Or programmatically via `getBalance` on the derived PDA. The atomic toolkit handles this transparently.
 
+## Fees waiting on the coin
+
+Since the October 2026 Pump upgrade, the new trade instructions (Pump `buy_v3` / `sell_v3`, PumpSwap `buy_v2` / `sell_v2`, and `multi_hop_swap`) do **not** pay the creator fee into the vault on every trade. They leave it on the coin:
+
+- pre-graduation on the bonding curve, in `BondingCurve.creator_fee`
+- post-graduation in the pool, in `Pool.creator_fees` (wrapped SOL in the pool's quote vault)
+
+The permissionless `sweep_creator_fee` instruction (one on each program, anyone can pay for it) moves that fee into the creator vault. `collect_creator_fee` and `collect_coin_creator_fee` do not sweep and do not fail when fees are unswept: they collect what is already in the vault and leave the rest behind. `distribute_creator_fees` and the fee-sharing setup instructions, on the other hand, fail until the coin is swept.
+
+Sweeps are per coin, so `collect-jito.js`, `consolidate.js`, `watch-collect.js` and `distribute.js` take the creator's coins in `MINTS` (or `MINT`) and put one sweep per coin with a fee waiting in front of the collect, in the same transaction. The planning lives in [`src/lib/creator-fee-sweep.js`](../../src/lib/creator-fee-sweep.js), which uses `PUMP_SDK.sweepCreatorFeeInstruction` and `PUMP_SDK.sweepPoolCreatorFeeInstruction` from `@pump-fun/pump-sdk` 4.
+
 ## Claim flow
 
 Three instructions matter here:
@@ -91,6 +102,7 @@ Output: bundle ID and Solscan link. Verify:
 
 ## Pitfalls
 
+- **Don't collect without sweeping.** A collect that skips the sweep succeeds and quietly leaves every fee from the new trade instructions on the curve or pool. Always set `MINTS`.
 - **Don't claim with the Pump-program ix on a post-graduation coin.** It'll fail because the vault is now owned by PumpSwap AMM. The toolkit detects this; manual SDK callers must check `BondingCurve.complete` first.
 - **Don't store `amount_sol` for a USDC claim.** The number is in micro-USDC, not lamports. Use `amount_quote` with the resolved decimals.
 - **Don't reuse the vault PDA for non-claim transfers.** The PDA is owned by the program; only the protocol can move its SOL.

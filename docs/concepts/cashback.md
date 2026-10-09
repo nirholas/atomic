@@ -34,7 +34,7 @@ The lack of a V2 variant means cashback is **SOL-only** for now. There's no `quo
 
 ## New cashback coins are retired (Pump program 2.0)
 
-The Pump program 2.0 no longer creates cashback coins: `create_v2` with the cashback flag fails with error 6082, and `@nirholas/pump-sdk` 2 throws `CashbackDeprecatedError` before building the instruction. Coins that were created with cashback keep trading, accruing, and claiming exactly as described on this page.
+The Pump program 2.0 no longer creates cashback coins: `create_v2` with the cashback flag fails with error 6082, and `@pump-fun/pump-sdk` 4 throws `CashbackDeprecatedError` from its create-and-buy builders (its bare `createV2Instruction` encodes the flag and lets the program refuse it). Coins that were created with cashback keep trading, accruing, and claiming exactly as described on this page.
 
 The toolkit's launchers reject `CASHBACK=true` with a pointer to the replacement, [holder rewards](./holder-rewards.md).
 
@@ -70,7 +70,7 @@ If you want to claim atomically as part of a larger flow (e.g. claim cashback + 
 
 ```ts
 import { PublicKey } from '@solana/web3.js';
-import { PUMP_SDK } from '@nirholas/pump-sdk';
+import { PUMP_SDK } from '@pump-fun/pump-sdk';
 
 const accumulator = await PUMP_SDK.fetchUserVolumeAccumulator(userPubkey);
 console.log({

@@ -1,4 +1,5 @@
 // One-shot consolidation in a single atomic Jito tx:
+//   0. Sweep creator fees waiting on each coin in MINTS into the vault
 //   1. Collect creator-fee vault into creator wallet
 //   2. Transfer creator balance -> DESTINATION (minus rent-exempt buffer)
 //   3. Transfer funder remaining SOL -> DESTINATION (leaves small buffer)
@@ -7,6 +8,8 @@
 //   DESTINATION       — where to consolidate everything to
 //   FUNDER_SECRET     — pays fee + tip, also drained
 //   CREATOR_SECRET    — signs the collect + drain
+//   MINTS             : comma-separated mints this creator launched; their
+//                       waiting creator fees are swept first (MINT also works)
 //   JITO_TIP          — default 0.005
 //   PRIORITY          — default 2000000
 
@@ -18,7 +21,11 @@ const {
   Connection, Keypair, PublicKey, SystemProgram,
   TransactionMessage, VersionedTransaction, ComputeBudgetProgram,
 } = require('@solana/web3.js');
-const { OnlinePumpSdk } = require('@nirholas/pump-sdk');
+const { OnlinePumpSdk } = require('@pump-fun/pump-sdk');
+const {
+  SWEEP_COMPUTE_UNITS, parseMintList, readPendingCreatorFees,
+  creatorFeeSweepInstructions, logPendingCreatorFees,
+} = require('./lib/creator-fee-sweep');
 
 const RPC_URL = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 const JITO_BUNDLE_URL = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
@@ -41,6 +48,7 @@ const FUNDER_BUFFER = 5000000; // 0.005 SOL buffer for unexpected ATA/rent costs
 
 const funder = Keypair.fromSecretKey(bs58decode(process.env.FUNDER_SECRET));
 const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
+const MINTS = parseMintList(process.env.MINTS || process.env.MINT);
 
 (async () => {
   const c = new Connection(RPC_URL, 'confirmed');
@@ -50,7 +58,11 @@ const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
   console.log('Leaked:', creator.publicKey.toBase58());
   console.log('Destination:', DESTINATION.toBase58());
 
-  const vaultBal = Number(await sdk.getCreatorVaultBalance(creator.publicKey));
+  const pending = await readPendingCreatorFees({ connection: c, creator: creator.publicKey, mints: MINTS });
+  // Curve fees swept in this tx reach the vault as lamports and are collected with it.
+  const vaultBal = Number(await sdk.getCreatorVaultBalance(creator.publicKey)) + Number(pending.curveLamports);
+  if (MINTS.length > 0) logPendingCreatorFees(pending);
+  else console.log('MINTS not set: fees still waiting on curves or pools will not be swept.');
   const funderBal = await c.getBalance(funder.publicKey, 'confirmed');
   const creatorBal = await c.getBalance(creator.publicKey, 'confirmed');
   console.log('\nVault:  ', vaultBal/1e9, 'SOL');
@@ -72,13 +84,15 @@ const creator = Keypair.fromSecretKey(bs58decode(process.env.CREATOR_SECRET));
   console.log('Total moved to dest: ~', (funderDrain + creatorDrain)/1e9, 'SOL');
 
   const tipAccount = new PublicKey(JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)]);
+  const sweepIxs = await creatorFeeSweepInstructions({ payer: funder.publicKey, creator: creator.publicKey, coins: pending.coins });
   const collectIxs = await sdk.collectCoinCreatorFeeInstructions(creator.publicKey, funder.publicKey);
 
   const { blockhash, lastValidBlockHeight } = await c.getLatestBlockhash('confirmed');
   const ixs = [
     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY }),
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 }),
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 100000 + SWEEP_COMPUTE_UNITS * sweepIxs.length }),
     SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: tipAccount, lamports: tipLamports }),
+    ...sweepIxs,
     ...collectIxs,
     SystemProgram.transfer({ fromPubkey: creator.publicKey, toPubkey: DESTINATION, lamports: creatorDrain }),
     SystemProgram.transfer({ fromPubkey: funder.publicKey, toPubkey: DESTINATION, lamports: funderDrain }),

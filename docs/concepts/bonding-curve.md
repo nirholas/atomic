@@ -68,7 +68,7 @@ The curve's math is identical — only the units of the SOL-axis reserves change
 
 ```ts
 import { Connection } from '@solana/web3.js';
-import { OnlinePumpSdk } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk } from '@pump-fun/pump-sdk';
 
 const sdk = new OnlinePumpSdk(new Connection(process.env.RPC_URL, 'confirmed'));
 const bc = await sdk.fetchBondingCurve(mint);
@@ -83,7 +83,9 @@ console.log({
 });
 ```
 
-`@nirholas/pump-sdk` 2 names the quote-side reserves `virtualQuoteReserves` and `realQuoteReserves` (formerly `virtualSolReserves` and `realSolReserves`). The byte layout is unchanged, but the old names now read `undefined`, and the balance is denominated in `quoteMint`, which is wrapped SOL only for a SOL-paired coin.
+`@pump-fun/pump-sdk` names the quote-side reserves `virtualQuoteReserves` and `realQuoteReserves` (formerly `virtualSolReserves` and `realSolReserves`). The byte layout is unchanged, but the old names now read `undefined`, and the balance is denominated in `quoteMint`, which is wrapped SOL only for a SOL-paired coin.
+
+Since the October 2026 upgrade the curve also carries `creatorFee` (creator fees left on the curve by `buy_v3` / `sell_v3` until a `sweep_creator_fee` moves them into the creator vault, see [creator-fees.md](./creator-fees.md#fees-waiting-on-the-coin)) and `protocolFees`. The PumpSwap `Pool` account that a graduated coin trades in now stores `virtual_quote_reserves` as a **signed** 128-bit integer, followed by `creator_fee_bps`, `protocol_fees` and `creator_fees`. Decode it with the SDK (or as `i128`), never as `u128`.
 
 The "virtual" reserves are the curve's internal accounting; the "real" reserves are the actual on-chain SOL/tokens. The curve uses virtual for pricing to make the function smooth without requiring a huge initial deposit.
 

@@ -42,10 +42,13 @@ There's also an `EMERGENCY` mode (`EMERGENCY=1 EMERGENCY_TO=<addr>`) that skips 
 ### Normal run
 
 ```
-[1] Read creator vault balance via OnlinePumpSdk.getCreatorVaultBalance.
-    If > 0:
-       Send collectCoinCreatorFee tx (creator signs + pays).
-       Creator wallet now holds (existing SOL + vault SOL).
+[1] Read creator vault balance via OnlinePumpSdk.getCreatorVaultBalance, plus the
+    creator fee waiting on MINT's bonding curve and pool (left there by the new
+    buy_v3 / sell_v3 and PumpSwap buy_v2 / sell_v2 trades).
+    If anything is collectable:
+       Send one tx with sweep_creator_fee for the curve and/or pool, then
+       collectCoinCreatorFee (creator signs + pays).
+       Creator wallet now holds (existing SOL + vault SOL + swept curve fee).
 
 [2] Compute swapLamports:
        Math.min(creatorBalance - 0.01 SOL rent buffer,

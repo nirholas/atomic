@@ -2,7 +2,7 @@
 
 Buy any SPL/Token-2022 token via the **Jupiter aggregator**, inside a Jito bundle. The funder funds the buyer in the bundle's first tx; the buyer's pre-built Jupiter swap tx runs in the second.
 
-The headline reason to use this instead of pump-sdk's direct buy instruction: when the pump.fun program is upgraded and gains required accounts that older `@nirholas/pump-sdk` versions don't pass, the SDK's `buy` ix starts failing in simulation. Jupiter — being a meta-router — keeps working because it routes through whatever venue currently quotes.
+The headline reason to use this instead of pump-sdk's direct buy instruction: when the pump.fun program is upgraded and gains required accounts that older `@pump-fun/pump-sdk` versions don't pass, the SDK's `buy` ix starts failing in simulation. Jupiter — being a meta-router — keeps working because it routes through whatever venue currently quotes.
 
 - **Source:** [`src/buy-jito.js`](../../src/buy-jito.js)
 - **npm alias:** `npm run buy`

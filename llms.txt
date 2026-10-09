@@ -9,7 +9,7 @@ This file is a flat index to help LLMs and AI coding assistants navigate the rep
 Five flows, all atomic via Jito bundles:
 
 - **Launch** (`src/fire-jito.js`, `src/fire-atomic-create.js`): create a pump.fun coin where the on-chain `creator` field is a different wallet from the SOL-providing funder.
-- **Collect** (`src/collect-jito.js`, `src/watch-collect.js`, `src/consolidate.js`): pull creator fees from the vault and immediately drain to a safe wallet in one tx — no window for a competing key-holder.
+- **Collect** (`src/collect-jito.js`, `src/watch-collect.js`, `src/consolidate.js`): sweep each coin's waiting creator fee (`MINTS`) into the vault, collect it, and immediately drain to a safe wallet in one tx — no window for a competing key-holder.
 - **Buy** (`src/buy-jito.js`): route a pump.fun token purchase through Jupiter inside a Jito bundle, useful when pump-sdk's buy ix is out of sync with the on-chain program.
 - **Rescue** (`src/rescue-tokens.js`): atomically move SPL or Token-2022 balances out of a leaked-key wallet without giving sweeper bots a window to insert.
 - **Distribute** (`src/distribute.js`): sqrt-weighted USDC payouts to holders, with an `EMERGENCY` single-target sweep mode.

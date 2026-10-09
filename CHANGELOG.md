@@ -4,6 +4,18 @@ All notable changes to this project will be documented here. Format loosely foll
 
 ## [Unreleased]
 
+### Changed: official `@pump-fun/pump-sdk` 4 (Pump October 2026 upgrade)
+- **Moved from `@nirholas/pump-sdk` ^2.0.0 to the official `@pump-fun/pump-sdk` ^4.0.0**, which ships the October 2026 IDLs (Pump `buy_v3` / `sell_v3`, PumpSwap `buy_v2` / `sell_v2`, `multi_hop_swap`, `sweep_creator_fee`) and decodes the PumpSwap pool's `virtual_quote_reserves` as a signed integer. The fork has no release that covers the upgrade. Every import, example and doc now names the official package.
+- **SDK 4 encodes the cashback flag in `create_v2` instead of throwing.** Only its create-and-buy builders still throw `CashbackDeprecatedError`, so the launchers' own `CASHBACK=true` refusal (pointing at program error 6082) is now the guard, and the test asserts that instead.
+
+### Added: creator-fee sweeps before every collect
+- **`collect-jito.js`, `consolidate.js`, `watch-collect.js` and `distribute.js` sweep before they collect.** The new trade instructions leave the creator fee on the coin's bonding curve (`BondingCurve.creator_fee`) or pool (`Pool.creator_fees`) until the permissionless `sweep_creator_fee` moves it into the creator vault, and a collect without the sweep silently leaves it behind. The scripts read what is waiting on each coin in `MINTS` (`MINT` works for one) and put the curve and pool sweeps in front of the collect in the same transaction, with the compute budget scaled per sweep and the drain amount including the swept curve fee.
+- [`src/lib/creator-fee-sweep.js`](src/lib/creator-fee-sweep.js): the shared planner. It skips, and says why, coins with no curve, coins paired with a token other than SOL, coins created by another wallet, and pools whose coin creator was moved. Covered by unit tests against real curve and pool byte layouts.
+- Examples 03, 04 and 08 sweep before collecting, and forward only lamports that actually arrive (example 03 no longer forwards a guessed amount).
+
+### Fixed
+- `watch-collect.js` spawned `collect-jito.js` by a path relative to the working directory, so it only worked when started from `src/`. It now resolves the script next to itself.
+
 ### Changed: `@nirholas/pump-sdk` 2 (Pump program 2.0)
 - **Moved from `@nirholas/pump-sdk` ^1.30.0 to ^2.0.0**, which tracks the Pump program 2.0 upgrade, syncs the IDL to the deployed 47-instruction program, and pulls in `@pump-fun/pump-swap-sdk` 1.20. The SDK no longer depends on puppeteer or playwright, so the install is much smaller.
 - **Cashback launches are rejected.** The program refuses new cashback coins (`create_v2` error 6082) and the SDK throws `CashbackDeprecatedError`. The launchers no longer pass a cashback flag, and `CASHBACK=true` stops them with a message pointing at holder rewards. Examples 01 and 02, which asked for cashback, now use holder rewards.

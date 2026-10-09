@@ -1,7 +1,8 @@
 // USDC rewards distribution for a SOL-paired pump.fun coin.
 //
 // Flow:
-//   1. Collect accumulated creator fees (SOL) from the pump creator vault to the creator wallet.
+//   1. Sweep the creator fees waiting on the coin's curve and pool into the creator vaults, then
+//      collect them (SOL) to the creator wallet in the same transaction.
 //   2. Quote and execute a SOL -> USDC swap on Jupiter for REWARD_PERCENT of the freshly collected SOL.
 //   3. Snapshot token holders for the mint.
 //   4. Filter (exclude curve/dev/treasury, skip dust under MIN_BPS of supply, skip holders without USDC ATA).
@@ -35,7 +36,10 @@ const {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require('@solana/spl-token');
-const { OnlinePumpSdk } = require('@nirholas/pump-sdk');
+const { OnlinePumpSdk, bondingCurvePda } = require('@pump-fun/pump-sdk');
+const {
+  readPendingCreatorFees, creatorFeeSweepInstructions, logPendingCreatorFees,
+} = require('./lib/creator-fee-sweep');
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 const USDC_DECIMALS = 6;
@@ -135,15 +139,21 @@ async function main() {
 
   // ---- 1. Collect creator fees from pump --------------------------------
   const vaultBalanceBefore = await onlineSdk.getCreatorVaultBalance(creator.publicKey);
+  const pending = await readPendingCreatorFees({ connection, creator: creator.publicKey, mints: [mint] });
   console.log('\n[1] Creator vault balance:', Number(vaultBalanceBefore) / 1e9, 'SOL');
+  logPendingCreatorFees(pending);
+  // Fees swept off the curve reach the vault as lamports and are collected with it.
+  const collectableLamports = Number(vaultBalanceBefore) + Number(pending.curveLamports);
 
-  if (vaultBalanceBefore.gtn(0)) {
+  if (collectableLamports > 0 || pending.poolLamports > 0n) {
+    const sweepIxs = await creatorFeeSweepInstructions({ payer: creator.publicKey, creator: creator.publicKey, coins: pending.coins });
     const collectIxs = await onlineSdk.collectCoinCreatorFeeInstructions(creator.publicKey, creator.publicKey);
     if (DRY_RUN) {
-      console.log(`    [dry] would send collectCoinCreatorFee tx with ${collectIxs.length} ix(s)`);
+      console.log(`    [dry] would send sweep + collectCoinCreatorFee tx with ${sweepIxs.length + collectIxs.length} ix(s)`);
     } else {
       const sig = await sendTx(connection, creator, [
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 }),
+        ...sweepIxs,
         ...collectIxs,
       ]);
       console.log('    collected. sig:', sig);
@@ -155,7 +165,7 @@ async function main() {
   // ---- 2. Decide how much SOL to convert --------------------------------
   const creatorBalance = await connection.getBalance(creator.publicKey, 'confirmed');
   const rentBuffer = 0.01 * 1e9; // leave 0.01 SOL behind for future tx fees
-  const collectedNow = Number(vaultBalanceBefore);
+  const collectedNow = collectableLamports;
   const swapLamports = EMERGENCY
     ? 0  // emergency mode skips swap; sweeps existing USDC
     : Math.max(0, Math.min(creatorBalance - rentBuffer, Math.floor(collectedNow * REWARD_PERCENT / 100)));
@@ -218,7 +228,7 @@ async function main() {
   console.log('    raw holders:', holders.length);
 
   // Exclusions
-  const bondingCurveAddr = (await import('@nirholas/pump-sdk')).bondingCurvePda(mint).toBase58();
+  const bondingCurveAddr = bondingCurvePda(mint).toBase58();
   const exclude = new Set([
     bondingCurveAddr,
     creator.publicKey.toBase58(),

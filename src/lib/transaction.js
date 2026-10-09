@@ -12,7 +12,7 @@
 // buildSignedTransaction therefore requires computeUnitLimit and resolves
 // loadedAccountsDataSizeLimit before compiling.
 //
-// @nirholas/pump-sdk and @solana/spl-token emit @solana/web3.js 1.x
+// @pump-fun/pump-sdk and @solana/spl-token emit @solana/web3.js 1.x
 // TransactionInstructions. web3.js 1.99 can read v1 but not serialize it, so
 // v1 messages are compiled and encoded with @solana/kit. Version 0 stays
 // available as an operational fallback: TRANSACTION_VERSION=0.

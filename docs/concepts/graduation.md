@@ -4,7 +4,7 @@ A pump.fun coin "graduates" when its bonding curve completes and its liquidity m
 
 ## The trigger
 
-The bonding curve has a real-SOL target (defaults to ~85 SOL across all pre-V2 launches; configurable in the `Global` account). When the curve's real quote reserves (`realQuoteReserves` in `@nirholas/pump-sdk` 2, formerly `realSolReserves`) reach this target, the next trade (or the next admin operation) sets `BondingCurve.complete = true`.
+The bonding curve has a real-SOL target (defaults to ~85 SOL across all pre-V2 launches; configurable in the `Global` account). When the curve's real quote reserves (`realQuoteReserves` in `@pump-fun/pump-sdk`, formerly `realSolReserves`) reach this target, the next trade (or the next admin operation) sets `BondingCurve.complete = true`.
 
 In pump.fun's UI this is rendered as "graduating at $69K market cap" — the dollar value is approximate, derived from the SOL target × the live SOL/USD rate.
 

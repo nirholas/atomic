@@ -9,7 +9,7 @@ Direction-of-travel for the `atomic` toolkit. This is a living document — item
 
 ## Next (queued)
 
-- **Adopt V2 USDC builders in `src/buy-jito.js`.** Once `@nirholas/pump-sdk@1.33.0` ships, plumb `quoteMint` through the Jupiter route metadata so USDC-paired coins are buyable directly (Jupiter routes work, but knowing the underlying pair lets us pick optimal routing).
+- **Adopt V2 USDC builders in `src/buy-jito.js`.** `@pump-fun/pump-sdk` 4 ships the quote-mint builders, so plumb `quoteMint` through the Jupiter route metadata so USDC-paired coins are buyable directly (Jupiter routes work, but knowing the underlying pair lets us pick optimal routing).
 - **V2 USDC support in `src/distribute.js`.** USDC reward distribution becomes simpler when the coin itself is USDC-paired — no SOL→USDC swap intermediate.
 - **Wallet provenance graph.** Extend `tools/check-pump-funding.ts` to walk N hops back, building a graph of funding sources. Useful for cluster analysis of related wallets.
 - **`tools/check-bundle-status.ts`.** CLI wrapper around Jito's `getBundleStatuses` RPC for post-hoc verification.

@@ -21,7 +21,7 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
-import { OnlinePumpSdk, PUMP_SDK } from '@nirholas/pump-sdk';
+import { OnlinePumpSdk, PUMP_SDK } from '@pump-fun/pump-sdk';
 import { assertLaunchOptionsAllowed, describeFeeRecipient, resolveLaunchOptions } from '../src/lib/launch-options.js';
 
 const conn = new Connection(process.env.RPC_URL, 'confirmed');
