@@ -1,3 +1,7 @@
+# atomic
+
+> Atomic scripts for launching, collecting fees from, and trading pump.fun coins. Built around Jito bundles for atomicity across multiple txs, useful when: You need the create tx's fee payer to differ from the wallet supplying the SOL (separate funder vs creator), The creator wallet has a public/shared private key...
+
 <!--
    █████╗ ████████╗ ██████╗ ███╗   ███╗██╗ ██████╗
   ██╔══██╗╚══██╔══╝██╔═══██╗████╗ ████║██║██╔════╝
@@ -56,11 +60,11 @@
 
 |     |     |
 | --- | --- |
-| **Atomic launch** | funder pays rent + Jito tip in Tx1, creator signs `createV2` in Tx2 — both land or neither does |
+| **Atomic launch** | funder pays rent + Jito tip in Tx1, creator signs `createV2` in Tx2: both land or neither does |
 | **Atomic collect** | `collectCoinCreatorFee` + drain to safe wallet in one tx, so a leaked creator key can't be swept |
 | **MEV-aware** | every multi-step money flow runs inside a Jito bundle, so no searcher can interleave |
 | **Tiny surface** | plain CommonJS scripts under [`src/`](src/), TS helpers under [`src/lib/`](src/lib/), read-only CLI tools under [`tools/`](tools/) |
-| **Pure env-driven** | every script is configured with environment variables — copy [`.env.example`](.env.example) and go |
+| **Pure env-driven** | every script is configured with environment variables: copy [`.env.example`](.env.example) and go |
 
 <p align="center">
   <img src="docs/assets/jito-bundle-flow.svg" alt="Jito bundle flow: funder + creator combine into one atomic bundle" width="820" />
@@ -68,7 +72,7 @@
 
 # pump-launch-toolkit
 
-Atomic scripts for launching, collecting fees from, and trading pump.fun coins. Built around **Jito bundles** for atomicity across multiple txs — useful when:
+Atomic scripts for launching, collecting fees from, and trading pump.fun coins. Built around **Jito bundles** for atomicity across multiple txs: useful when:
 
 - You need the create tx's fee payer to differ from the wallet supplying the SOL (separate funder vs creator)
 - The creator wallet has a public/shared private key (e.g. multi-sig setup, or you accept other signers exist) and you want every fee collection to atomically move the SOL to a safe wallet on the same tx
@@ -102,10 +106,10 @@ Atomic scripts for launching, collecting fees from, and trading pump.fun coins. 
 
 The pages under [`docs/`](docs/) go deeper than this README:
 
-- [**docs/setup.md**](docs/setup.md) — wallets, funding, RPC choice, Jito tip refresh, troubleshooting.
-- [**docs/architecture.md**](docs/architecture.md) — funder vs creator, the 1232-byte tx-size constraint, bundle layouts, sweeper-bot threat model.
-- [**docs/recipes.md**](docs/recipes.md) — end-to-end flows: launch + auto-collect, rescue from leaked wallet, USDC distribution, etc.
-- [**docs/scripts/**](docs/scripts/) — one reference page per runnable file: env vars, tx layout, signing flow, failure modes.
+- [**docs/setup.md**](docs/setup.md): wallets, funding, RPC choice, Jito tip refresh, troubleshooting.
+- [**docs/architecture.md**](docs/architecture.md): funder vs creator, the 1232-byte tx-size constraint, bundle layouts, sweeper-bot threat model.
+- [**docs/recipes.md**](docs/recipes.md): end-to-end flows: launch + auto-collect, rescue from leaked wallet, USDC distribution, etc.
+- [**docs/scripts/**](docs/scripts/): one reference page per runnable file: env vars, tx layout, signing flow, failure modes.
 
 The [`docs/README.md`](docs/README.md) is the index.
 
@@ -200,7 +204,7 @@ All variables can be supplied via shell env or a `.env` file at the repo root. S
 | `NAME`, `SYMBOL`, `URI` | metadata / launch | Token name, ticker, and metadata URI. |
 | `IMAGE_PATH` | `metadata.js` | Local image to upload to pump.fun IPFS. |
 | `DEV_BUY_SOL` | launch | Optional dev-buy size atomically bundled with the create. `0` to skip. |
-| `JITO_TIP` | Jito-bundle scripts | Tip in SOL paid to the Jito block engine. 0.005 is a sane start; raise to 0.01–0.02 in busy markets. |
+| `JITO_TIP` | Jito-bundle scripts | Tip in SOL paid to the Jito block engine. 0.005 is a sane start; raise to 0.01-0.02 in busy markets. |
 | `PRIORITY` | most | Per-CU price in micro-lamports, converted to a total lamport fee at the tx's CU limit. |
 | `PRIORITY_FEE_LAMPORTS` | most | Total priority fee in lamports. Overrides `PRIORITY`. This is the unit transaction v1 charges natively. |
 | `LOADED_ACCOUNTS_DATA_LIMIT` | most | Byte budget for loaded account data. Measured from chain with headroom when unset. |
@@ -215,13 +219,13 @@ All variables can be supplied via shell env or a `.env` file at the repo root. S
 
 - **Sweeper bots watch public/leaked keys.** SOL or tokens that *rest* in such a wallet for more than a few seconds will be drained. The atomic patterns in this toolkit work around this by ensuring funds never settle there.
 - **Token-2022 sweepers exist.** If you buy a token *to* a public/shared wallet, expect the tokens to be moved out by other key-holders within ~3 seconds. Use `rescue-tokens.js` patterns to atomically buy-and-transfer if you need plausible deniability about the buyer wallet.
-- **Jito tip auctions.** 0.001 SOL is the floor but rarely lands in busy times. Start at 0.005, bump to 0.01–0.02 if bundles return `Invalid` from Jito.
+- **Jito tip auctions.** 0.001 SOL is the floor but rarely lands in busy times. Start at 0.005, bump to 0.01-0.02 if bundles return `Invalid` from Jito.
 - **Jito tip account rotation.** The hardcoded list may drift. Fetch `getTipAccounts` from the Jito Block Engine RPC if you hit `"Bundles must write lock at least one tip account"` errors.
 - **pump-sdk version drift.** The buy instruction may add required accounts that older SDK versions don't include (e.g. `BuybackFeeRecipient`). When this happens, route buys through Jupiter (`buy-jito.js`) instead.
 
 ## Architecture: why Jito bundles
 
-A pump.fun create instruction has many accounts. Under version 0 it sits near the 1232-byte tx size limit; transaction v1 raises that to 4096 bytes, so the squeeze described below is a version 0 constraint. To make the create tx come **from** the creator wallet (so on-chain attribution matches), you'd need to also fund the creator with rent SOL atomically — but that pushes the tx over size.
+A pump.fun create instruction has many accounts. Under version 0 it sits near the 1232-byte tx size limit; transaction v1 raises that to 4096 bytes, so the squeeze described below is a version 0 constraint. To make the create tx come **from** the creator wallet (so on-chain attribution matches), you'd need to also fund the creator with rent SOL atomically: but that pushes the tx over size.
 
 Jito bundles solve this: two separate txs that share a blockhash and execute atomically (all-or-nothing) on the block engine. No bot can insert between them. This is the basis of `fire-jito.js`, `collect-jito.js`, `consolidate.js`, `buy-jito.js`, and `rescue-tokens.js`.
 
@@ -246,29 +250,29 @@ npm run test:watch     # watch mode
 npm run typecheck      # tsc --noEmit
 ```
 
-[`tools/check-pump-funding.ts`](tools/check-pump-funding.ts) can be smoke-tested against a known pump-seeded wallet on mainnet — the verdict should be `SEEDED BY PUMP.FUN` with the first funder being one of the pump fee recipients.
+[`tools/check-pump-funding.ts`](tools/check-pump-funding.ts) can be smoke-tested against a known pump-seeded wallet on mainnet: the verdict should be `SEEDED BY PUMP.FUN` with the first funder being one of the pump fee recipients.
 
 ## Glossary
 
-- **Funder** — the wallet that pays rent + Jito tips. Holds the bulk of SOL; signs Tx1 of a launch bundle. Generally a fresh, private key.
-- **Creator** — the wallet that appears as the on-chain creator on pump.fun. Signs the `createV2` instruction. May have a public or shared private key (which is the whole reason for the atomic collect pattern).
-- **Creator vault** — the PDA where pump.fun accumulates creator fees for a coin. Drained via `collectCoinCreatorFee`.
-- **Destination** — the safe wallet that collected SOL/tokens are atomically routed to in the same tx, so no sweeper bot has a window to grab them.
-- **Jito bundle** — an ordered group of txs submitted to the Jito Block Engine that execute atomically (all-or-nothing) and that no MEV searcher can interleave between. The basis of every `*-jito.js` script.
-- **Jito tip** — SOL paid to a Jito tip account in one of the bundle txs. Acts as an auction bid for inclusion. Floor is 0.001 SOL; in busy windows you need 0.005–0.02 SOL to land.
-- **Seeded by pump.fun** — a wallet whose first inbound SOL transfer originated from a pump.fun fee recipient or the migration authority. Detected by `detectSeededByPump` / [`tools/check-pump-funding.ts`](tools/check-pump-funding.ts).
+- **Funder**: the wallet that pays rent + Jito tips. Holds the bulk of SOL; signs Tx1 of a launch bundle. Generally a fresh, private key.
+- **Creator**: the wallet that appears as the on-chain creator on pump.fun. Signs the `createV2` instruction. May have a public or shared private key (which is the whole reason for the atomic collect pattern).
+- **Creator vault**: the PDA where pump.fun accumulates creator fees for a coin. Drained via `collectCoinCreatorFee`.
+- **Destination**: the safe wallet that collected SOL/tokens are atomically routed to in the same tx, so no sweeper bot has a window to grab them.
+- **Jito bundle**: an ordered group of txs submitted to the Jito Block Engine that execute atomically (all-or-nothing) and that no MEV searcher can interleave between. The basis of every `*-jito.js` script.
+- **Jito tip**: SOL paid to a Jito tip account in one of the bundle txs. Acts as an auction bid for inclusion. Floor is 0.001 SOL; in busy windows you need 0.005-0.02 SOL to land.
+- **Seeded by pump.fun**: a wallet whose first inbound SOL transfer originated from a pump.fun fee recipient or the migration authority. Detected by `detectSeededByPump` / [`tools/check-pump-funding.ts`](tools/check-pump-funding.ts).
 
 ## Reference docs
 
-- [**pump.fun V2 USDC Rollout reference**](./docs/v2-usdc-rollout/README.md) — full engineering reference for the 2026-05-21 V2 USDC quote-mint upgrade: instruction & event discriminators, byte layouts, parsing patterns, migration recipes, per-repo audit, and standalone executor prompts under [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/).
+- [**pump.fun V2 USDC Rollout reference**](./docs/v2-usdc-rollout/README.md): full engineering reference for the 2026-05-21 V2 USDC quote-mint upgrade: instruction & event discriminators, byte layouts, parsing patterns, migration recipes, per-repo audit, and standalone executor prompts under [`prompts/v2-usdc-rollout/`](./prompts/v2-usdc-rollout/).
 
 ## Visual index
 
 | Visual | What it shows |
 |---|---|
-| ![ATOMIC logo](docs/assets/atomic-logo.svg) | Animated ATOMIC mark — three orbiting electron rings over a Solana-themed nucleus. |
+| ![ATOMIC logo](docs/assets/atomic-logo.svg) | Animated ATOMIC mark: three orbiting electron rings over a Solana-themed nucleus. |
 | ![Jito bundle flow](docs/assets/jito-bundle-flow.svg) | Funder + Creator → Jito bundle → on-chain atomic create. Same blockhash, one block engine decision. |
-| ![Atomic collect](docs/assets/atomic-collect.svg) | `collectCoinCreatorFee` + drain to destination in a single tx. Sweeper bot is locked out — no slot to insert. |
+| ![Atomic collect](docs/assets/atomic-collect.svg) | `collectCoinCreatorFee` + drain to destination in a single tx. Sweeper bot is locked out: no slot to insert. |
 
 All three live under [`docs/assets/`](docs/assets/) as standalone animated SVGs, so they render inline on GitHub and can be embedded into other docs or talks.
 
@@ -304,26 +308,3 @@ Full documentation site: **https://nirholas.github.io/atomic/**
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=nirholas/atomic&type=Date)](https://www.star-history.com/#nirholas/atomic&Date)
-
-<!-- three.ws:growth -->
-## Support the project
-
-If atomic saves you time, **[star it on GitHub](https://github.com/nirholas/atomic)**. Stars are how other developers and AI agents find the repositories worth trusting, and they cost you one click.
-
-Know someone who would use it? [Post on X](https://twitter.com/intent/tweet?text=atomic%3A%20Atomic%20scripts%20for%20launching%2C%20collecting%20fees%20from%2C%20and%20trading%20pump.fun%20coins&url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fatomic) · [Share on Bluesky](https://bsky.app/intent/compose?text=atomic%3A%20Atomic%20scripts%20for%20launching%2C%20collecting%20fees%20from%2C%20and%20trading%20pump.fun%20coins%20https%3A%2F%2Fgithub.com%2Fnirholas%2Fatomic) · [Share on LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fatomic) · [Submit to Hacker News](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fnirholas%2Fatomic&t=atomic%3A%20Atomic%20scripts%20for%20launching%2C%20collecting%20fees%20from%2C%20and%20trading%20pump.fun%20coins) · [Share on Reddit](https://www.reddit.com/submit?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fatomic&title=atomic%3A%20Atomic%20scripts%20for%20launching%2C%20collecting%20fees%20from%2C%20and%20trading%20pump.fun%20coins)
-
-## Built for AI agents too
-
-Coding agents and LLM tooling can read this repo directly: [AGENTS.md](./AGENTS.md), [llms.txt](./llms.txt), [llms-full.txt](./llms-full.txt). Point an agent at `https://github.com/nirholas/atomic` and it has the context it needs.
-
-## More from the same author
-
-- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme): the full catalog, grouped by topic
-- [three.ws](https://three.ws): the platform for 3D AI agents with Solana wallets, a skill marketplace and x402 payments
-- Questions or ideas: [open an issue](https://github.com/nirholas/atomic/issues) or [start a discussion](https://github.com/nirholas/atomic/discussions)
-
-## Contributors
-
-[![Contributors](https://contrib.rocks/image?repo=nirholas/atomic)](https://github.com/nirholas/atomic/graphs/contributors)
-
-<!-- /three.ws:growth -->

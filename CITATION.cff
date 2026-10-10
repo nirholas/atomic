@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "atomic"
+abstract: "Atomic scripts for launching, collecting fees from, and trading pump.fun coins. Built around Jito bundles for atomicity across multiple txs, useful when: You need the create tx's fee payer to differ from the wallet supplying the SOL (separate funder vs creator), The creator wallet has a public/shared private key..."
+repository-code: "https://github.com/nirholas/atomic"
+url: "https://three.ws"
+authors:
+  - name: three.ws
+    website: "https://three.ws"
