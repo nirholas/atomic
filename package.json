@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@pump-fun/pump-sdk": "^4.0.0",
-    "@solana/kit": "^8.4.0",
+    "@solana/kit": "^8.6.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.99.0",
     "bn.js": "^5.2.4",
@@ -41,10 +41,10 @@
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^7.3.7",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }
