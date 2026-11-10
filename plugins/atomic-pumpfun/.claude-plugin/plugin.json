@@ -1,0 +1,18 @@
+{
+  "name": "atomic-pumpfun",
+  "version": "0.1.0",
+  "description": "Run atomic pump.fun launch, creator-fee collection, buy and rescue scripts built on Jito bundles, plus a wallet provenance check.",
+  "author": {
+    "name": "nirholas"
+  },
+  "repository": "https://github.com/nirholas/atomic",
+  "homepage": "https://github.com/nirholas/atomic",
+  "keywords": [
+    "solana",
+    "pumpfun",
+    "jito",
+    "bundles",
+    "creator-fees",
+    "token-launch"
+  ]
+}
