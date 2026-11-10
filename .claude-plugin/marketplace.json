@@ -1,0 +1,21 @@
+{
+  "name": "atomic",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "Run atomic pump.fun launch, creator-fee collection, buy and rescue scripts built on Jito bundles, plus a wallet provenance check.",
+  "plugins": [
+    {
+      "name": "atomic-pumpfun",
+      "source": "./plugins/atomic-pumpfun",
+      "description": "Run atomic pump.fun launch, creator-fee collection, buy and rescue scripts built on Jito bundles, plus a wallet provenance check.",
+      "category": "finance",
+      "tags": [
+        "solana",
+        "pumpfun",
+        "jito",
+        "scripts"
+      ]
+    }
+  ]
+}
