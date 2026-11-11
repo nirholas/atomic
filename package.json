@@ -45,7 +45,8 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^7.3.7",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "bigint-buffer": "file:vendor/bigint-buffer"
   },
   "overrides": {
     "toml@<=5.0.0": "^5.0.1",
@@ -54,6 +55,7 @@
     "stream-json@<=3.5.0": "^3.6.0",
     "stream-json@<3.6.0": "^3.6.0",
     "stream-json@<=3.4.0": "^3.6.0",
-    "uuid@<11.1.1": "^11.1.1"
+    "uuid@<11.1.1": "^11.1.1",
+    "bigint-buffer": "$bigint-buffer"
   }
 }
