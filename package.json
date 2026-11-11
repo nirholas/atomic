@@ -44,7 +44,7 @@
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^7.3.7",
+    "vite": "^8.3.6",
     "vitest": "^5.0.5",
     "bigint-buffer": "file:vendor/bigint-buffer"
   },
