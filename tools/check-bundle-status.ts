@@ -1,9 +1,11 @@
 #!/usr/bin/env tsx
 /**
  * Query the status of a Jito bundle by UUID. Useful for debugging why a
- * bundle did or did not land — distinguishes "Invalid" (rejected before
- * scheduling) from "Pending" (scheduled but not yet landed) from "Landed"
- * (executed in a block) from "Failed" (executed but the inner tx failed).
+ * bundle did or did not land. `getBundleStatuses` only knows bundles that
+ * landed, so when it has no record the tool asks `getInflightBundleStatuses`,
+ * which covers the last ~5 minutes and distinguishes "Invalid" (unknown or
+ * rejected) from "Pending" (not yet landed) from "Failed" (every region
+ * failed to land it) from "Landed".
  *
  * Usage:
  *   npx tsx tools/check-bundle-status.ts <bundleUuid> [blockEngineUrl]
@@ -48,43 +50,79 @@ interface BundleStatus {
   err?: { Ok: null } | { Err: unknown } | null;
 }
 
-interface BundleStatusEnvelope {
-  context: { slot: number };
-  value: BundleStatus[];
+interface InflightBundleStatus {
+  bundle_id: string;
+  status: 'Invalid' | 'Pending' | 'Failed' | 'Landed';
+  landed_slot: number | null;
 }
 
-async function getBundleStatuses(endpoint: string, uuid: string): Promise<BundleStatusEnvelope> {
+interface StatusEnvelope<T> {
+  context: { slot: number };
+  value: Array<T | null>;
+}
+
+const REQUEST_TIMEOUT_MS = 10_000;
+
+async function blockEngineCall<T>(endpoint: string, method: string, uuid: string): Promise<StatusEnvelope<T>> {
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'getBundleStatuses',
-      params: [[uuid]],
-    }),
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: [[uuid]] }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
-    throw new Error(`Block engine HTTP ${res.status}: ${await res.text()}`);
+    throw new Error(`Block engine HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
 
-  const body = (await res.json()) as JsonRpcResponse<BundleStatusEnvelope>;
+  const body = (await res.json()) as JsonRpcResponse<StatusEnvelope<T>>;
   if (body.error) {
     throw new Error(`Block engine RPC error ${body.error.code}: ${body.error.message}`);
   }
-  if (!body.result) {
+  if (!body.result || !Array.isArray(body.result.value)) {
     throw new Error(`Empty result: ${JSON.stringify(body).slice(0, 200)}`);
   }
   return body.result;
 }
 
-function classify(status: BundleStatus | undefined): {
-  label: string;
-  color: string;
-  exit: number;
-  diagnosis: string;
-} {
+type Verdict = { label: string; color: string; exit: number; diagnosis: string };
+
+function classifyInflight(status: InflightBundleStatus | null | undefined): Verdict {
+  switch (status?.status) {
+    case 'Landed':
+      return {
+        label: 'LANDED',
+        color: GREEN,
+        exit: 0,
+        diagnosis: `Landed at slot ${status.landed_slot ?? '?'}; getBundleStatuses has not indexed it yet. Re-query for the transaction results.`,
+      };
+    case 'Pending':
+      return {
+        label: 'PENDING',
+        color: YELLOW,
+        exit: 1,
+        diagnosis: 'Accepted and still in flight. Re-query in a slot or two; a bundle that never lands turns Failed, then ages out.',
+      };
+    case 'Failed':
+      return {
+        label: 'FAILED',
+        color: RED,
+        exit: 2,
+        diagnosis: 'Every region failed to land the bundle: it lost the auction (raise JITO_TIP), a transaction failed simulation, or the blockhash expired. Nothing it contains executed.',
+      };
+    case 'Invalid':
+      return {
+        label: 'INVALID',
+        color: RED,
+        exit: 2,
+        diagnosis: 'The block engine rejected the bundle or has no record of it in the last ~5 minutes. If you submitted it recently, it was rejected: re-run the script and read the sendBundle error.',
+      };
+    default:
+      return classify(undefined);
+  }
+}
+
+function classify(status: BundleStatus | null | undefined): Verdict {
   if (!status) {
     return {
       label: 'UNKNOWN',
@@ -145,16 +183,19 @@ async function main(): Promise<void> {
   console.log(`${DIM}endpoint: ${endpoint}${NC}`);
   console.log(`${DIM}uuid:     ${uuid}${NC}\n`);
 
-  let envelope: BundleStatusEnvelope;
+  let status: BundleStatus | null | undefined;
+  let verdict: Verdict;
   try {
-    envelope = await getBundleStatuses(endpoint, uuid);
+    status = (await blockEngineCall<BundleStatus>(endpoint, 'getBundleStatuses', uuid)).value[0];
+    verdict = status
+      ? classify(status)
+      : classifyInflight((await blockEngineCall<InflightBundleStatus>(endpoint, 'getInflightBundleStatuses', uuid)).value[0]);
   } catch (err) {
     console.error(`${RED}RPC error:${NC} ${(err as Error).message}`);
     process.exit(4);
   }
 
-  const status = envelope.value[0];
-  const { label, color, exit, diagnosis } = classify(status);
+  const { label, color, exit, diagnosis } = verdict;
 
   console.log(`${BOLD}Status:${NC} ${color}${label}${NC}`);
   if (status?.slot) console.log(`${BOLD}Slot:${NC} ${status.slot}`);
