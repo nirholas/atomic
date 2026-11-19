@@ -17,10 +17,9 @@
  *   HOLDER_REWARD=true  launch a holder-reward coin. The SDK routes the dev-buy's
  *                       creator vault to holderRewardsPda(mint) automatically.
  *
- * Run: node examples/02-launch-with-dev-buy.js
+ * Run: node --env-file=.env examples/02-launch-with-dev-buy.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { OnlinePumpSdk } from '@pump-fun/pump-sdk';

@@ -107,18 +107,22 @@ Most scripts read `*_SECRET` directly via `bs58.decode`. The TS helpers and `dis
 
 ### Loading `.env`
 
-The scripts don't auto-load `.env` — they read directly from `process.env`. Two ways to get vars in:
+The scripts don't auto-load `.env` — they read directly from `process.env`, and `dotenv` is not a dependency. Three ways to get vars in:
 
 1. **Export inline per command:**
    ```bash
    FUNDER_SECRET=... CREATOR_SECRET=... npm run collect
    ```
-2. **Use `dotenv` from your shell:**
+2. **Export the whole file from your shell:**
    ```bash
    set -a; source .env; set +a
    npm run collect
    ```
    (`set -a` makes every subsequent assignment auto-exported.)
+3. **Let Node read the file** (Node 20.6+):
+   ```bash
+   node --env-file=.env src/collect-jito.js
+   ```
 
 ---
 

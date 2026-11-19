@@ -81,7 +81,7 @@ Each `skills/<name>/SKILL.md` is a Claude-Code-compatible skill descriptor with 
 
 - Markdown: sentence-case headings, GitHub-flavored fenced code blocks with language tags, tables for any list of 3+ items with attributes.
 - TypeScript: strict mode, no `any`, async/await throughout, JSDoc on public exports.
-- JavaScript scripts (`src/`): ESM, top-level `await` allowed, `dotenv` for env vars, mask secrets in logs.
+- JavaScript scripts (`src/`): CommonJS (`require`, async IIFE), configuration read from `process.env` (no `dotenv`; `.env` is loaded by the shell or `node --env-file`), mask secrets in logs. `examples/` is ES modules via `examples/package.json`.
 
 ## When you're stuck
 

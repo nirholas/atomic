@@ -98,7 +98,7 @@ Your `.env` is missing or not loaded. Check:
 
 1. `.env` exists in the directory you're running from (repo root for the `src/` scripts).
 2. The variable is set: `cat .env | grep FUNDER_SECRET`.
-3. The script uses `dotenv/config` (it does in this repo).
+3. The variables are actually in the process environment. Nothing in this repo loads `.env` for you: run `set -a; source .env; set +a` first, or start the script with `node --env-file=.env src/<script>.js`.
 
 ### `"Invalid base58 / invalid keypair"`
 

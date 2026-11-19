@@ -14,7 +14,7 @@ User reports a bundle problem.
 │
 ├─ Does the user have a bundle UUID?
 │   ├─ YES → tools/check-bundle-status.ts <uuid>
-│   │       └─ classify: LANDED / PROCESSED / PENDING / UNKNOWN / inner-tx failure
+│   │       └─ classify: LANDED / PROCESSED / PENDING / FAILED / INVALID / UNKNOWN / inner-tx failure
 │   │
 │   └─ NO  → ask script's stdout. fire-jito.js, collect-jito.js etc. all
 │            print the bundle UUID at submission time. If the user didn't
@@ -86,7 +86,7 @@ Pass to `check-bundle-status.ts` as the second positional arg; for script submis
 
 ## Tip economics
 
-Tip cost is a real expense paid per attempt regardless of landing. Tune deliberately:
+The tip is only paid when the bundle lands (it is a transfer inside the all-or-nothing bundle), but every landed bundle pays the full amount whatever the competition was. Tune deliberately:
 
 | Scenario | Suggested starting tip |
 |---|---|

@@ -35,7 +35,7 @@ cp .env.example .env
 ## Conventions
 
 - All commands run from the repo root. Scripts live in `src/`; `package.json` exposes `npm run <name>` shortcuts (see `package.json` for the full list).
-- Secrets are passed as env vars in the examples for readability. In practice, put them in `.env` (which is gitignored) and rely on `dotenv`.
+- Secrets are passed as env vars in the examples for readability. In practice, put them in `.env` (which is gitignored) and load it with `set -a; source .env; set +a` or `node --env-file=.env`; the scripts do not read `.env` on their own.
 - `JITO_TIP=0.005` is the starting default everywhere. Bump to `0.01`–`0.02` if your bundles return `Invalid`.
 - Where a tutorial references another flow, the link uses the same numbering above.
 

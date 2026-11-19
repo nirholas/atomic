@@ -186,7 +186,7 @@ MIN_COLLECT_SOL=0.05 \
 
 ## Environment variables
 
-All variables can be supplied via shell env or a `.env` file at the repo root. See [`.env.example`](.env.example) for a copy-paste template.
+Every variable is read from `process.env`; the scripts do not load `.env` themselves. Export them in your shell (`set -a; source .env; set +a`) or pass the file to Node (`node --env-file=.env src/<script>.js`, Node 20.6+). See [`.env.example`](.env.example) for a copy-paste template and [`docs/setup.md`](docs/setup.md#loading-env) for details.
 
 | Var | Used by | Purpose |
 |---|---|---|

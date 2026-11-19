@@ -15,10 +15,9 @@
  *   HOLDER_REWARD=true  launch a holder-reward coin (creator fees are paid out to
  *                       holders by pump.fun). Cashback launches are retired.
  *
- * Run: node examples/01-basic-launch.js
+ * Run: node --env-file=.env examples/01-basic-launch.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { OnlinePumpSdk, PUMP_SDK } from '@pump-fun/pump-sdk';

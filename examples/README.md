@@ -24,9 +24,11 @@ Short, runnable JS snippets demonstrating each of the toolkit's call surfaces. E
 cp .env.example .env
 # Edit .env with your throwaway-wallet keys and target addresses
 
-# Then:
-node examples/01-basic-launch.js
+# Then (Node 20.6+ loads the file itself; nothing else reads .env):
+node --env-file=.env examples/01-basic-launch.js
 ```
+
+`examples/package.json` marks this folder as ES modules, so the examples can use `import` and top-level `await` while the scripts in `src/` stay CommonJS.
 
 Most examples read the same env vars as the production scripts in `src/`. See [`.env.example`](../.env.example) for the full list.
 
@@ -57,11 +59,11 @@ For production use, **always use the `src/` scripts**, not the examples. Example
 
 ## Common patterns across examples
 
-- **Load env**: `import 'dotenv/config';`
+- **Load env**: run with `node --env-file=.env` (the examples read `process.env` and do not load `.env` themselves)
 - **Build connection**: `new Connection(process.env.RPC_URL!)`
 - **Decode keypair**: `Keypair.fromSecretKey(bs58.decode(process.env.FUNDER_SECRET!))`
 - **Build instruction**: `await PUMP_SDK.<methodName>({ ... })`
-- **Submit via Jito**: helper in `src/lib/jito.ts` (or a stripped version inline in the example)
+- **Submit via Jito**: helper in `src/lib/jito.js` (or a stripped version inline in the example)
 - **Log result**: print bundle ID or tx signature, surface Solscan link
 
 ## Contributing examples

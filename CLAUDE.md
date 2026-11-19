@@ -15,7 +15,7 @@ This repo ships Node scripts that **sign and broadcast real Solana transactions*
 ├── README.md, SECURITY.md, CONTRIBUTING.md, ...    repo-level docs
 ├── AGENTS.md, CLAUDE.md, SKILL.md                  AI-assistant instructions
 ├── .env.example                                    every env var the scripts read
-├── src/                                            runnable scripts (ESM, run via `npm run <name>`)
+├── src/                                            runnable scripts (CommonJS, run via `npm run <name>`)
 │   ├── fire-jito.js, collect-jito.js, ...
 │   └── lib/                                        shared TS helpers (funding-source, programs)
 ├── tools/                                          standalone CLIs (tsx)

@@ -15,10 +15,9 @@
  *   TOTAL_USDC (raw amount in micro-USDC), MIN_BPS (min share to qualify, e.g. 10),
  *   JITO_TIP
  *
- * Run: node examples/07-distribute-sqrt-weighted.js
+ * Run: node --env-file=.env examples/07-distribute-sqrt-weighted.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import {
   Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL,

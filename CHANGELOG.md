@@ -4,6 +4,15 @@ All notable changes to this project will be documented here. Format loosely foll
 
 ## [Unreleased]
 
+### Fixed: examples load, and the docs say how `.env` is really read
+- **Every example failed to start.** They use `import` and top-level `await` in a CommonJS package and imported `dotenv`, which is not a dependency. `examples/package.json` now marks the folder as ES modules, the `dotenv` imports are gone, and each example runs with `node --env-file=.env examples/<file>.js` (Node 20.6+).
+- **`.env` is not auto-loaded.** The README said variables could come from a `.env` file, and TROUBLESHOOTING, the tutorials index and AGENTS.md said the scripts use `dotenv`. None of that was true. They now describe the three ways that work: inline exports, `set -a; source .env; set +a`, or `node --env-file=.env`.
+- `docs/jito-bundle-mechanics.md` said a bundle whose `createV2` reverts still pays its tip, and that the tip floor is 0.001 SOL. A bundle is all-or-nothing, so its tip is only paid when it lands, and the block engine accepts tips from 1,000 lamports. The `bundle-debug` skill repeated the first claim.
+
+### Added: tests
+- `src/lib/pool-layout.test.ts` derives the PumpSwap `Pool` offsets of `coin_creator` and `creator_fees` from the pump_amm IDL in the installed SDK and checks `readPoolCreatorBucket` against them, so an SDK bump that moves either field fails CI.
+- `src/lib/jito.test.ts` covers the tip-account list, the `sendBundle` payload and error path, and `waitForSignatures`.
+
 ### Changed: official `@pump-fun/pump-sdk` 4 (Pump October 2026 upgrade)
 - **Moved from `@nirholas/pump-sdk` ^2.0.0 to the official `@pump-fun/pump-sdk` ^4.0.0**, which ships the October 2026 IDLs (Pump `buy_v3` / `sell_v3`, PumpSwap `buy_v2` / `sell_v2`, `multi_hop_swap`, `sweep_creator_fee`) and decodes the PumpSwap pool's `virtual_quote_reserves` as a signed integer. The fork has no release that covers the upgrade. Every import, example and doc now names the official package.
 - **SDK 4 encodes the cashback flag in `create_v2` instead of throwing.** Only its create-and-buy builders still throw `CashbackDeprecatedError`, so the launchers' own `CASHBACK=true` refusal (pointing at program error 6082) is now the guard, and the test asserts that instead.

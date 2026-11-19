@@ -11,10 +11,9 @@
  * Required .env:
  *   RPC_URL, FUNDER_SECRET, TARGET_MINT, BUY_SOL, SLIPPAGE_BPS, JITO_TIP
  *
- * Run: node examples/05-buy-via-jupiter.js
+ * Run: node --env-file=.env examples/05-buy-via-jupiter.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import {
   Connection, Keypair, PublicKey, SystemProgram, VersionedTransaction,

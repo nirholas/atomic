@@ -15,10 +15,9 @@
  * Required .env:
  *   RPC_URL, FUNDER_SECRET, CREATOR_SECRET, MINT, DESTINATION, JITO_TIP
  *
- * Run: node examples/03-collect-and-drain.js
+ * Run: node --env-file=.env examples/03-collect-and-drain.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { OnlinePumpSdk } from '@pump-fun/pump-sdk';

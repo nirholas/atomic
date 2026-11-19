@@ -12,10 +12,9 @@
  *   RPC_URL, FUNDER_SECRET, CREATOR_SECRET, MINT, DESTINATION, MIN_COLLECT_SOL,
  *   POLL_INTERVAL_SECONDS, JITO_TIP, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  *
- * Run: node examples/08-watch-collect-alerts.js
+ * Run: node --env-file=.env examples/08-watch-collect-alerts.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { OnlinePumpSdk } from '@pump-fun/pump-sdk';

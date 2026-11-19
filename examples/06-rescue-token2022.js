@@ -12,10 +12,9 @@
  *   RESCUE_MINT (base58 mint to transfer),
  *   JITO_TIP
  *
- * Run: node examples/06-rescue-token2022.js
+ * Run: node --env-file=.env examples/06-rescue-token2022.js
  */
 
-import 'dotenv/config';
 import bs58 from 'bs58';
 import {
   Connection, Keypair, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL,

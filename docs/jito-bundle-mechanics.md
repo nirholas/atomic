@@ -89,8 +89,8 @@ Jito occasionally rotates the set. If a bundle returns `"Bundles must write lock
 The tip is a Solana auction bid. The block engine ranks bundles by **tip ÷ CU consumed** and includes top bidders until block CU budget is exhausted. Implications:
 
 - A small bundle (low CU) with a small tip can outcompete a bigger bundle with the same tip.
-- During congestion, the bidding floor moves. Floor is 0.001 SOL but landing often requires 0.005–0.02 in busy markets.
-- **The tip is paid even if the bundle reverts at the program level.** A failed `createV2` tx still costs you the tip. There is no refund.
+- During congestion, the bidding floor moves. The block engine accepts tips from 1,000 lamports, but landing often requires 0.005–0.02 SOL in busy markets.
+- **The tip is only paid if the bundle lands.** It is an ordinary transfer inside the bundle, and the bundle is all-or-nothing, so a `createV2` that fails takes the tip transfer down with it. What a dropped bundle can cost you is time (the blockhash keeps ageing) and, on the next attempt, a higher tip. The exception is a transaction submitted with `sendTransaction`, outside a bundle, which pays its fees whether or not it succeeds.
 - The tip is **not** the same as the Solana priority fee. You typically pay both. Priority fee tightens leader-slot inclusion *within* the block engine pipeline; the tip wins the inclusion auction itself.
 
 ### Tip placement in the bundle
@@ -100,6 +100,8 @@ The tip transfer must be in **a tx the searcher signs** — you cannot tip from 
 - `fire-jito.js` — tip transfer is in Tx 1 (the funder's tx), bundled before the createV2 tx.
 - `collect-jito.js` / `consolidate.js` / `rescue-tokens.js` — single-tx bundles, so the tip transfer is in the same tx as the business logic.
 - `buy-jito.js` — tip transfer is in a separate funder tx, with the Jupiter swap in Tx 2.
+
+Jito's guidance is to put the tip in the **last** transaction of a multi-transaction bundle, or in the same transaction as the business logic: if a bundle is ever split up on its way to the leader (the "uncle bandit" case), a tip at the front can be paid while the rest never runs. `fire-jito.js` and `buy-jito.js` tip in Tx 1 today.
 
 ---
 
