@@ -14,6 +14,7 @@
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
+import { redactRpcUrl } from './redact.js';
 
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
@@ -80,7 +81,7 @@ async function main(): Promise<void> {
   const conn = new Connection(rpcUrl, 'confirmed');
 
   console.log(`${BOLD}Wallet:${NC} ${wallet.toBase58()}`);
-  console.log(`${DIM}RPC: ${rpcUrl}${NC}\n`);
+  console.log(`${DIM}RPC: ${redactRpcUrl(rpcUrl)}${NC}\n`);
 
   const [lamports, splBalances, t22Balances] = await Promise.all([
     conn.getBalance(wallet),

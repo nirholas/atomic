@@ -11,6 +11,7 @@
 
 import { Connection } from '@solana/web3.js';
 import { detectSeededByPump } from '../src/lib/funding-source.js';
+import { redactRpcUrl } from './redact.js';
 
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
@@ -29,7 +30,7 @@ async function main(): Promise<void> {
     rpcArg ?? process.env['RPC_URL'] ?? 'https://api.mainnet-beta.solana.com';
 
   console.log(`${DIM}Wallet: ${wallet}${NC}`);
-  console.log(`${DIM}RPC:    ${rpcUrl}${NC}`);
+  console.log(`${DIM}RPC:    ${redactRpcUrl(rpcUrl)}${NC}`);
   console.log(`${DIM}Scanning signatures…${NC}\n`);
 
   const connection = new Connection(rpcUrl, 'confirmed');

@@ -28,6 +28,7 @@
 
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import bs58Mod from 'bs58';
+import { redactRpcUrl } from './redact.js';
 
 const bs58decode: (s: string) => Uint8Array =
   (bs58Mod as { default?: { decode: (s: string) => Uint8Array }; decode?: (s: string) => Uint8Array }).default?.decode
@@ -82,7 +83,7 @@ async function main(): Promise<void> {
   checks.push({
     name: 'RPC_URL',
     status: process.env['RPC_URL'] ? 'ok' : 'info',
-    detail: rpcUrl + (process.env['RPC_URL'] ? '' : ' (default — public mainnet, may rate-limit)'),
+    detail: redactRpcUrl(rpcUrl) + (process.env['RPC_URL'] ? '' : ' (default — public mainnet, may rate-limit)'),
   });
 
   // ── Wallet parsing ──────────────────────────────────────────────────

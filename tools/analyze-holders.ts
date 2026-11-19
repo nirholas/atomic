@@ -19,6 +19,7 @@
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
+import { redactRpcUrl } from './redact.js';
 
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
@@ -149,7 +150,7 @@ async function main(): Promise<void> {
 
   console.log(`${BOLD}Holder analysis${NC}`);
   console.log(`${DIM}mint: ${mint.toBase58()}${NC}`);
-  console.log(`${DIM}rpc:  ${rpcUrl}${NC}\n`);
+  console.log(`${DIM}rpc:  ${redactRpcUrl(rpcUrl)}${NC}\n`);
 
   const programId = await detectProgramId(conn, mint);
   console.log(`${DIM}program: ${programId.equals(TOKEN_2022_PROGRAM_ID) ? 'Token-2022' : 'SPL Token'}${NC}`);
