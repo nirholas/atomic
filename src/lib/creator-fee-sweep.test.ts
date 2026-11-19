@@ -18,7 +18,7 @@ const {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require('./creator-fee-sweep');
 
-const USDC = new PublicKey('EPjFWdd5AufqSSqeM2qJ1oDiJ8uXnACjzAm6Lb8L3xBG');
+const USDC = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 const CURVE_DISC = Buffer.from(pumpIdl.accounts.find((a) => a.name === 'BondingCurve')!.discriminator);
 
 function u64(value: bigint): Buffer {
